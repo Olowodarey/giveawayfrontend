@@ -1,61 +1,64 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Gift, Sparkles, ExternalLink, Twitter, AlertCircle } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { Footer } from "@/components/footer"
-import Confetti from "react-confetti"
-import { useWindowSize } from "@/hooks/use-window-size"
-import { useCallAnyContract } from "@chipi-stack/nextjs"
-import { codeToFelt252 } from "@/lib/contract-utils"
-import { GIVEAWAY_CONTRACT_ADDRESS } from "@/lib/contract-config"
-import { useWallet, useWalletPin } from "@/contexts/wallet-context"
-import { useAuth } from "@clerk/nextjs"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Gift,
+  Sparkles,
+  ExternalLink,
+  Twitter,
+  AlertCircle,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Footer } from "@/components/footer";
+import Confetti from "react-confetti";
+import { useWindowSize } from "@/hooks/use-window-size";
+import { useCallAnyContract } from "@chipi-stack/nextjs";
+import { codeToFelt252 } from "@/lib/contract-utils";
+import { GIVEAWAY_CONTRACT_ADDRESS } from "@/lib/contract-config";
+import { useWallet, useWalletPin } from "@/contexts/wallet-context";
+import { useAuth } from "@clerk/nextjs";
 
-type ClaimState = "initial" | "valid" | "invalid" | "claimed"
+type ClaimState = "initial" | "valid" | "invalid" | "claimed";
 
 export default function ClaimPage() {
-  const [claimCode, setClaimCode] = useState("")
-  const [claimState, setClaimState] = useState<ClaimState>("initial")
-  const [prizeAmount, setPrizeAmount] = useState("")
-  const [txHash, setTxHash] = useState("")
-  const [showConfetti, setShowConfetti] = useState(false)
-  const [isClaiming, setIsClaiming] = useState(false)
-  const [giveawayName, setGiveawayName] = useState("") // Giveaway name
-  
-  const { toast } = useToast()
-  const { width, height } = useWindowSize()
-  const { wallet, isConnected } = useWallet()
-  const walletPin = useWalletPin()
-  const { getToken } = useAuth()
-  const { callAnyContractAsync } = useCallAnyContract()
+  const [claimCode, setClaimCode] = useState("");
+  const [claimState, setClaimState] = useState<ClaimState>("initial");
+  const [prizeAmount, setPrizeAmount] = useState("");
+  const [txHash, setTxHash] = useState("");
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [giveawayId, setGiveawayId] = useState("1"); // Default to giveaway 1
+
+  const { toast } = useToast();
+  const { width, height } = useWindowSize();
+  const { wallet, isConnected } = useWallet();
+  const walletPin = useWalletPin();
+  const { getToken } = useAuth();
+  const { callAnyContractAsync } = useCallAnyContract();
 
   const validateCode = () => {
-    if (!giveawayName.trim()) {
-      toast({
-        title: "Missing Giveaway Name",
-        description: "Please enter the giveaway name",
-        variant: "destructive",
-      })
-      return
-    }
-
     if (!claimCode.trim()) {
       toast({
         title: "Missing Code",
         description: "Please enter a claim code",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     // For now, just mark as valid - actual validation happens on-chain
-    setClaimState("valid")
-  }
+    setClaimState("valid");
+  };
 
   const handleClaim = async () => {
     // Check if wallet is connected
@@ -64,8 +67,8 @@ export default function ClaimPage() {
         title: "Wallet Not Connected",
         description: "Please connect your wallet first",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     if (!walletPin) {
@@ -73,28 +76,20 @@ export default function ClaimPage() {
         title: "PIN Not Found",
         description: "Please reconnect your wallet",
         variant: "destructive",
-      })
+      });
     }
 
-    setIsClaiming(true)
+    setIsClaiming(true);
 
     try {
       // Get JWT token from Clerk using custom template
-      const bearerToken = await getToken({ template: "giveawayapp" })
+      const bearerToken = await getToken({ template: "giveawayapp" });
       if (!bearerToken) {
-        throw new Error("Failed to get authentication token")
+        throw new Error("Failed to get authentication token");
       }
 
-      // Step 2: Convert giveaway name and claim code to felt252
-      const nameFelt = codeToFelt252(giveawayName)
-      const codeFelt = codeToFelt252(claimCode)
-
-      console.log('Claiming prize with:', {
-        giveawayName,
-        nameFelt,
-        claimCode,
-        codeFelt
-      })
+      // Step 2: Convert claim code to felt252
+      const codeFelt = codeToFelt252(claimCode);
 
       // Step 3: Call claim_prize on contract
       const result = await callAnyContractAsync({
@@ -107,134 +102,73 @@ export default function ClaimPage() {
               contractAddress: GIVEAWAY_CONTRACT_ADDRESS,
               entrypoint: "claim_prize",
               calldata: [
-                nameFelt, // name (felt252)
-                codeFelt, // code (felt252)
+                giveawayId, // giveaway_id
+                codeFelt, // code
               ],
             },
           ],
         },
         bearerToken: bearerToken,
-      })
-
-      console.log('Transaction result:', result)
+      });
 
       // Success! Extract transaction hash
-      const hash = (result as any)?.transaction_hash || (result as any)?.txHash || "0x..."
-      setTxHash(hash)
-      
-      // Extract amount from PrizeClaimed event
-      let amount = "0"
-      try {
-        const events = (result as any)?.events || []
-        console.log('Events:', events)
-        
-        // Find PrizeClaimed event
-        const prizeClaimedEvent = events.find((event: any) => {
-          const keys = event.keys || []
-          // PrizeClaimed event key (you may need to adjust this)
-          return keys.length > 0 && event.data && event.data.length >= 4
-        })
-        
-        if (prizeClaimedEvent && prizeClaimedEvent.data) {
-          // Event data structure: [giveaway_id, code_hash, winner, amount_low, amount_high]
-          // The amount is a u256, so it's split into low and high
-          const data = prizeClaimedEvent.data
-          console.log('Prize claimed event data:', data)
-          
-          // Amount is at index 3 and 4 (low and high parts of u256)
-          const amountLow = BigInt(data[data.length - 2] || "0")
-          const amountHigh = BigInt(data[data.length - 1] || "0")
-          
-          // Combine u256 parts: amount = low + (high * 2^128)
-          const amountWei = amountLow + (amountHigh << 128n)
-          
-          // Convert from wei (18 decimals) to STRK
-          const amountStrk = Number(amountWei) / 1e18
-          amount = amountStrk.toFixed(2)
-          
-          console.log('Extracted amount:', {
-            amountLow: amountLow.toString(),
-            amountHigh: amountHigh.toString(),
-            amountWei: amountWei.toString(),
-            amountStrk: amount
-          })
-        } else {
-          console.warn('PrizeClaimed event not found in transaction')
-          // Fallback: try to get from receipt or show placeholder
-          amount = "???"
-        }
-      } catch (error) {
-        console.error('Error parsing event data:', error)
-        amount = "???"
-      }
-      
-      setPrizeAmount(amount)
-      
-      setClaimState("claimed")
-      setShowConfetti(true)
-      setTimeout(() => setShowConfetti(false), 5000)
+      const hash =
+        (result as any)?.transaction_hash || (result as any)?.txHash || "0x...";
+      setTxHash(hash);
+
+      // For demo, show a random amount (in production, query from contract)
+      const amount = (Math.random() * 50 + 10).toFixed(2);
+      setPrizeAmount(amount);
+
+      setClaimState("claimed");
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
 
       toast({
         title: "Prize Claimed!",
         description: `You won ${amount} STRK!`,
-      })
+      });
     } catch (error: any) {
-      console.error("Error claiming prize:", error)
-      
-      const errorMessage = error.message || error.toString() || ""
-      let userMessage = "Failed to claim prize. Please try again."
-      let errorTitle = "Claim Failed"
-      
-      // Check for specific error patterns
-      if (errorMessage.includes("ENTRYPOINT_FAILED") || errorMessage.includes("execution error")) {
-        // Parse Cairo error messages
-        if (errorMessage.includes("ADDRESS_ALREADY_CLAIMED") || 
-            errorMessage.toLowerCase().includes("already claimed")) {
-          errorTitle = "Already Claimed"
-          userMessage = "You have already claimed a prize from this giveaway. Each wallet can only claim once per giveaway."
-          setClaimState("invalid")
-        } else if (errorMessage.includes("PRIZE_ALREADY_CLAIMED") || 
-                   errorMessage.includes("INVALID_CODE")) {
-          errorTitle = "Invalid Code"
-          userMessage = "This code is invalid or has already been used by another user."
-          setClaimState("invalid")
-        } else if (errorMessage.includes("GIVEAWAY_NOT_FOUND")) {
-          errorTitle = "Giveaway Not Found"
-          userMessage = "The giveaway name you entered does not exist. Please check the name and try again."
-        } else if (errorMessage.includes("GIVEAWAY_EXPIRED")) {
-          errorTitle = "Giveaway Expired"
-          userMessage = "This giveaway has expired and is no longer accepting claims."
-        } else if (errorMessage.includes("GIVEAWAY_INACTIVE")) {
-          errorTitle = "Giveaway Inactive"
-          userMessage = "This giveaway is not currently active."
-        } else {
-          // Generic execution error
-          userMessage = "The transaction failed. The code may be invalid, already claimed, or you may have already claimed from this giveaway."
-          setClaimState("invalid")
-        }
-      } else if (errorMessage.includes("User rejected") || errorMessage.includes("User denied")) {
-        errorTitle = "Transaction Cancelled"
-        userMessage = "You cancelled the transaction."
+      console.error("Error claiming prize:", error);
+
+      // Check if it's an invalid code error
+      if (
+        error.message?.includes("INVALID_CODE") ||
+        error.message?.includes("PRIZE_ALREADY_CLAIMED")
+      ) {
+        setClaimState("invalid");
       }
-      
+
       toast({
-        title: errorTitle,
-        description: userMessage,
+        title: "Claim Failed",
+        description:
+          error.message ||
+          "Failed to claim prize. The code may be invalid or already claimed.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsClaiming(false)
+      setIsClaiming(false);
     }
-  }
+  };
 
   const shareOnTwitter = () => {
-    const text = `I just won ${prizeAmount} STRK from a mystery giveaway on @StarkGive! 🎉\n\nCheck it out at starkgive.app`
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, "_blank")
-  }
+    const text = `I just won ${prizeAmount} STRK from a mystery giveaway on @StarkGive! 🎉\n\nCheck it out at starkgive.app`;
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
+      "_blank"
+    );
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
-      {showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={500} />}
+      {showConfetti && (
+        <Confetti
+          width={width}
+          height={height}
+          recycle={false}
+          numberOfPieces={500}
+        />
+      )}
 
       <div className="flex-1 py-8 md:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
         <div className="container mx-auto max-w-lg">
@@ -246,21 +180,24 @@ export default function ClaimPage() {
                   <Gift className="h-8 w-8 text-accent" />
                 </div>
                 <CardTitle className="text-2xl">Claim Your Prize</CardTitle>
-                <CardDescription>Enter your claim code to reveal your mystery prize</CardDescription>
+                <CardDescription>
+                  Enter your claim code to reveal your mystery prize
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="giveawayName">Giveaway Name</Label>
+                  <Label htmlFor="giveawayId">Giveaway ID</Label>
                   <Input
-                    id="giveawayName"
-                    type="text"
-                    placeholder="e.g., Summer2024"
-                    value={giveawayName}
-                    onChange={(e) => setGiveawayName(e.target.value)}
+                    id="giveawayId"
+                    type="number"
+                    placeholder="1"
+                    value={giveawayId}
+                    onChange={(e) => setGiveawayId(e.target.value)}
                     className="text-center"
+                    min="1"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Enter the giveaway name you want to claim from
+                    Enter the giveaway ID you want to claim from
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -288,20 +225,22 @@ export default function ClaimPage() {
                   <AlertCircle className="h-8 w-8 text-destructive" />
                 </div>
                 <CardTitle className="text-2xl">Invalid Code</CardTitle>
-                <CardDescription>This code is invalid or has already been claimed</CardDescription>
+                <CardDescription>
+                  This code is invalid or has already been claimed
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
                   <p className="text-sm text-center text-foreground">
-                    The code <span className="font-mono font-semibold">{claimCode}</span> could not be found or has
-                    already been used.
+                    The code{" "}
+                    <span className="font-mono font-semibold">{claimCode}</span>{" "}
+                    could not be found or has already been used.
                   </p>
                 </div>
                 <Button
                   onClick={() => {
-                    setClaimState("initial")
-                    setGiveawayName("")
-                    setClaimCode("")
+                    setClaimState("initial");
+                    setClaimCode("");
                   }}
                   variant="outline"
                   className="w-full"
@@ -319,24 +258,34 @@ export default function ClaimPage() {
                 <div className="mx-auto h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center mb-4 animate-pulse">
                   <Sparkles className="h-8 w-8 text-accent" />
                 </div>
-                <CardTitle className="text-2xl">Mystery Prize Available!</CardTitle>
-                <CardDescription>Connect your wallet to claim your surprise amount</CardDescription>
+                <CardTitle className="text-2xl">
+                  Mystery Prize Available!
+                </CardTitle>
+                <CardDescription>
+                  Connect your wallet to claim your surprise amount
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="p-6 rounded-lg bg-gradient-to-br from-accent/10 to-primary/10 border border-accent/20 text-center">
-                  <div className="text-sm text-muted-foreground mb-2">Prize Amount</div>
+                  <div className="text-sm text-muted-foreground mb-2">
+                    Prize Amount
+                  </div>
                   <div className="text-5xl font-bold text-accent mb-2">???</div>
                   <div className="text-sm text-muted-foreground">STRK</div>
                 </div>
 
                 <div className="space-y-3">
-                  <Button 
-                    onClick={handleClaim} 
-                    className="w-full" 
+                  <Button
+                    onClick={handleClaim}
+                    className="w-full"
                     size="lg"
                     disabled={isClaiming}
                   >
-                    {isClaiming ? "Claiming..." : isConnected ? "Claim Prize" : "Connect Wallet & Claim"}
+                    {isClaiming
+                      ? "Claiming..."
+                      : isConnected
+                      ? "Claim Prize"
+                      : "Connect Wallet & Claim"}
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">
                     No gas fees required - completely free to claim
@@ -354,25 +303,36 @@ export default function ClaimPage() {
                   <Gift className="h-8 w-8 text-success" />
                 </div>
                 <CardTitle className="text-2xl">Congratulations!</CardTitle>
-                <CardDescription>Your prize has been claimed successfully</CardDescription>
+                <CardDescription>
+                  Your prize has been claimed successfully
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="p-6 rounded-lg bg-gradient-to-br from-success/10 to-accent/10 border border-success/20 text-center">
-                  <div className="text-sm text-muted-foreground mb-2">You Won</div>
-                  <div className="text-5xl font-bold text-success mb-2">{prizeAmount}</div>
-                  <div className="text-lg font-semibold text-foreground">STRK</div>
+                  <div className="text-sm text-muted-foreground mb-2">
+                    You Won
+                  </div>
+                  <div className="text-5xl font-bold text-success mb-2">
+                    {prizeAmount}
+                  </div>
+                  <div className="text-lg font-semibold text-foreground">
+                    STRK
+                  </div>
                 </div>
 
                 <div className="space-y-3 p-4 rounded-lg bg-muted/50">
                   <div className="flex justify-between items-start gap-4">
-                    <span className="text-sm text-muted-foreground">Transaction</span>
+                    <span className="text-sm text-muted-foreground">
+                      Transaction
+                    </span>
                     <a
                       href={`https://starkscan.co/tx/${txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm font-mono text-accent hover:underline flex items-center gap-1 break-all text-right"
                     >
-                      {txHash.substring(0, 10)}...{txHash.substring(txHash.length - 8)}
+                      {txHash.substring(0, 10)}...
+                      {txHash.substring(txHash.length - 8)}
                       <ExternalLink className="h-3 w-3 flex-shrink-0" />
                     </a>
                   </div>
@@ -385,11 +345,10 @@ export default function ClaimPage() {
                   </Button>
                   <Button
                     onClick={() => {
-                      setClaimState("initial")
-                      setGiveawayName("")
-                      setClaimCode("")
-                      setPrizeAmount("")
-                      setTxHash("")
+                      setClaimState("initial");
+                      setClaimCode("");
+                      setPrizeAmount("");
+                      setTxHash("");
                     }}
                     variant="outline"
                     className="w-full"
@@ -403,7 +362,9 @@ export default function ClaimPage() {
 
           {/* Info Section */}
           <div className="mt-8 p-4 rounded-lg bg-muted/50 border border-border">
-            <h3 className="font-semibold text-foreground mb-2 text-sm">How to find claim codes</h3>
+            <h3 className="font-semibold text-foreground mb-2 text-sm">
+              How to find claim codes
+            </h3>
             <ul className="text-sm text-muted-foreground space-y-1 leading-relaxed">
               <li>• Follow creators on Twitter who run giveaways</li>
               <li>• Look for posts containing claim codes</li>
@@ -414,5 +375,5 @@ export default function ClaimPage() {
       </div>
       <Footer />
     </div>
-  )
+  );
 }

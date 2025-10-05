@@ -96,7 +96,8 @@ export default function CreatePage() {
     if (!formData.name || !formData.totalPrize || !formData.expiryHours) {
       toast({
         title: "Missing Information",
-        description: "Please fill in giveaway name, total prize and expiry time",
+        description:
+          "Please fill in giveaway name, total prize and expiry time",
         variant: "destructive",
       });
       return false;
@@ -161,9 +162,27 @@ export default function CreatePage() {
       return;
     }
 
-    console.log('Wallet PIN:', walletPin ? 'Present' : 'Missing')
-    console.log('Wallet:', wallet)
-    
+    // Verify contract addresses are loaded
+    if (!GIVEAWAY_CONTRACT_ADDRESS || !STRK_TOKEN_ADDRESS) {
+      toast({
+        title: "Configuration Error",
+        description: "Contract addresses not configured. Please check environment variables.",
+        variant: "destructive",
+      });
+      console.error("Missing contract addresses:", {
+        giveaway: GIVEAWAY_CONTRACT_ADDRESS,
+        strk: STRK_TOKEN_ADDRESS,
+      });
+      return;
+    }
+
+    console.log("Wallet PIN:", walletPin ? "Present" : "Missing");
+    console.log("Wallet:", wallet);
+    console.log("Contract addresses:", {
+      giveaway: GIVEAWAY_CONTRACT_ADDRESS,
+      strk: STRK_TOKEN_ADDRESS,
+    });
+
     if (!walletPin) {
       toast({
         title: "PIN Not Found",
@@ -180,8 +199,8 @@ export default function CreatePage() {
       if (!bearerToken) {
         throw new Error("Failed to get authentication token");
       }
-      
-      console.log('Bearer token obtained')
+
+      console.log("Bearer token obtained");
 
       // Hash codes using Poseidon via server-side API (same as contract does when claiming)
       const codes = winners.map((w) => w.code);
@@ -214,7 +233,7 @@ export default function CreatePage() {
       });
 
       try {
-        console.log('Attempting to approve tokens with PIN...')
+        console.log("Attempting to approve tokens with PIN...");
         await approveAsync({
           params: {
             encryptKey: walletPin,
@@ -226,10 +245,12 @@ export default function CreatePage() {
           },
           bearerToken: bearerToken,
         });
-        console.log('Token approval successful')
+        console.log("Token approval successful");
       } catch (approvalError: any) {
-        console.error('Approval error:', approvalError)
-        throw new Error(`Token approval failed: ${approvalError.message}. Please disconnect and reconnect your wallet.`)
+        console.error("Approval error:", approvalError);
+        throw new Error(
+          `Token approval failed: ${approvalError.message}. Please disconnect and reconnect your wallet.`
+        );
       }
 
       // Create giveaway on contract
@@ -240,8 +261,8 @@ export default function CreatePage() {
 
       // Convert giveaway name to felt252
       const giveawayNameFelt = codeToFelt(formData.name);
-      console.log('Giveaway name:', formData.name);
-      console.log('Giveaway name as felt:', giveawayNameFelt);
+      console.log("Giveaway name:", formData.name);
+      console.log("Giveaway name as felt:", giveawayNameFelt);
 
       const calldata = [
         giveawayNameFelt,
@@ -252,12 +273,12 @@ export default function CreatePage() {
         prizeAmounts.length.toString(),
         ...prizeAmounts.flat(),
         formData.expiryHours,
-      ]
-      
-      console.log('=== CALLDATA DEBUG ===')
-      console.log('Calldata being sent:', calldata)
-      console.log('Calldata length:', calldata.length)
-      console.log('Calldata breakdown:', {
+      ];
+
+      console.log("=== CALLDATA DEBUG ===");
+      console.log("Calldata being sent:", calldata);
+      console.log("Calldata length:", calldata.length);
+      console.log("Calldata breakdown:", {
         name: giveawayNameFelt,
         totalLow: totalU256.low,
         totalHigh: totalU256.high,
@@ -265,11 +286,13 @@ export default function CreatePage() {
         codes: codeHashes,
         numPrizes: prizeAmounts.length,
         prizes: prizeAmounts.flat(),
-        expiry: formData.expiryHours
-      })
-      console.log('Expected format: [name, total_low, total_high, num_codes, ...codes, num_prizes, ...prizes_flat, expiry]')
-      console.log('Contract address:', GIVEAWAY_CONTRACT_ADDRESS)
-      console.log('=== END DEBUG ===')
+        expiry: formData.expiryHours,
+      });
+      console.log(
+        "Expected format: [name, total_low, total_high, num_codes, ...codes, num_prizes, ...prizes_flat, expiry]"
+      );
+      console.log("Contract address:", GIVEAWAY_CONTRACT_ADDRESS);
+      console.log("=== END DEBUG ===");
 
       const result = await callAnyContractAsync({
         params: {
@@ -388,9 +411,7 @@ export default function CreatePage() {
                     type="text"
                     placeholder="e.g., Summer2024"
                     value={formData.name}
-                    onChange={(e) =>
-                      handleInputChange("name", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     maxLength={31}
                   />
                   <p className="text-xs text-muted-foreground">
@@ -529,9 +550,7 @@ export default function CreatePage() {
               <CardContent className="space-y-6">
                 <div className="space-y-4 p-4 rounded-lg bg-muted/50">
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">
-                      Giveaway Name
-                    </span>
+                    <span className="text-muted-foreground">Giveaway Name</span>
                     <span className="font-semibold text-foreground">
                       {formData.name}
                     </span>
