@@ -15,7 +15,6 @@ export function Header() {
 
   const navLinks = [
     { href: "/", label: "Home" },
-    { href: "/deploy-account", label: "Deploy Account" },
     { href: "/create", label: "Create" },
     { href: "/claim", label: "Claim" },
     { href: "/wallet", label: "Wallet" },

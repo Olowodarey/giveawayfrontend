@@ -74,6 +74,10 @@ export const GIVEAWAY_ABI = [
     "type": "struct",
     "members": [
       {
+        "name": "name",
+        "type": "core::felt252"
+      },
+      {
         "name": "creator",
         "type": "core::starknet::contract_address::ContractAddress"
       },
@@ -92,6 +96,36 @@ export const GIVEAWAY_ABI = [
       {
         "name": "claimed_amount",
         "type": "core::integer::u256"
+      },
+      {
+        "name": "expiry_time",
+        "type": "core::integer::u64"
+      },
+      {
+        "name": "is_active",
+        "type": "core::bool"
+      }
+    ]
+  },
+  {
+    "name": "giveaway::structs::Structs::PublicGiveawayInfo",
+    "type": "struct",
+    "members": [
+      {
+        "name": "name",
+        "type": "core::felt252"
+      },
+      {
+        "name": "creator",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "num_winners",
+        "type": "core::integer::u32"
+      },
+      {
+        "name": "claimed_count",
+        "type": "core::integer::u32"
       },
       {
         "name": "expiry_time",
@@ -127,6 +161,10 @@ export const GIVEAWAY_ABI = [
         "name": "create_giveaway",
         "type": "function",
         "inputs": [
+          {
+            "name": "name",
+            "type": "core::felt252"
+          },
           {
             "name": "total_amount",
             "type": "core::integer::u256"
@@ -168,9 +206,41 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
+        "name": "get_public_giveaway_info",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "giveaway_id",
+            "type": "core::integer::u32"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "giveaway::structs::Structs::PublicGiveawayInfo"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
         "name": "get_giveaway_count",
         "type": "function",
         "inputs": [],
+        "outputs": [
+          {
+            "type": "core::integer::u32"
+          }
+        ],
+        "state_mutability": "view"
+      },
+      {
+        "name": "get_giveaway_id_by_name",
+        "type": "function",
+        "inputs": [
+          {
+            "name": "name",
+            "type": "core::felt252"
+          }
+        ],
         "outputs": [
           {
             "type": "core::integer::u32"
@@ -223,8 +293,8 @@ export const GIVEAWAY_ABI = [
         "type": "function",
         "inputs": [
           {
-            "name": "giveaway_id",
-            "type": "core::integer::u32"
+            "name": "name",
+            "type": "core::felt252"
           },
           {
             "name": "code",
@@ -239,8 +309,8 @@ export const GIVEAWAY_ABI = [
         "type": "function",
         "inputs": [
           {
-            "name": "giveaway_id",
-            "type": "core::integer::u32"
+            "name": "name",
+            "type": "core::felt252"
           }
         ],
         "outputs": [],
@@ -647,6 +717,11 @@ export const GIVEAWAY_ABI = [
         "kind": "data",
         "name": "giveaway_id",
         "type": "core::integer::u32"
+      },
+      {
+        "kind": "data",
+        "name": "name",
+        "type": "core::felt252"
       },
       {
         "kind": "data",

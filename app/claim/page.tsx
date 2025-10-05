@@ -25,7 +25,7 @@ export default function ClaimPage() {
   const [txHash, setTxHash] = useState("")
   const [showConfetti, setShowConfetti] = useState(false)
   const [isClaiming, setIsClaiming] = useState(false)
-  const [giveawayId, setGiveawayId] = useState("1") // Default to giveaway 1
+  const [giveawayName, setGiveawayName] = useState("") // Giveaway name
   
   const { toast } = useToast()
   const { width, height } = useWindowSize()
@@ -35,6 +35,15 @@ export default function ClaimPage() {
   const { callAnyContractAsync } = useCallAnyContract()
 
   const validateCode = () => {
+    if (!giveawayName.trim()) {
+      toast({
+        title: "Missing Giveaway Name",
+        description: "Please enter the giveaway name",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!claimCode.trim()) {
       toast({
         title: "Missing Code",
@@ -76,8 +85,16 @@ export default function ClaimPage() {
         throw new Error("Failed to get authentication token")
       }
 
-      // Step 2: Convert claim code to felt252
+      // Step 2: Convert giveaway name and claim code to felt252
+      const nameFelt = codeToFelt252(giveawayName)
       const codeFelt = codeToFelt252(claimCode)
+
+      console.log('Claiming prize with:', {
+        giveawayName,
+        nameFelt,
+        claimCode,
+        codeFelt
+      })
 
       // Step 3: Call claim_prize on contract
       const result = await callAnyContractAsync({
@@ -90,8 +107,8 @@ export default function ClaimPage() {
               contractAddress: GIVEAWAY_CONTRACT_ADDRESS,
               entrypoint: "claim_prize",
               calldata: [
-                giveawayId, // giveaway_id
-                codeFelt,   // code
+                nameFelt, // name (felt252)
+                codeFelt, // code (felt252)
               ],
             },
           ],
@@ -99,12 +116,58 @@ export default function ClaimPage() {
         bearerToken: bearerToken,
       })
 
+      console.log('Transaction result:', result)
+
       // Success! Extract transaction hash
       const hash = (result as any)?.transaction_hash || (result as any)?.txHash || "0x..."
       setTxHash(hash)
       
-      // For demo, show a random amount (in production, query from contract)
-      const amount = (Math.random() * 50 + 10).toFixed(2)
+      // Extract amount from PrizeClaimed event
+      let amount = "0"
+      try {
+        const events = (result as any)?.events || []
+        console.log('Events:', events)
+        
+        // Find PrizeClaimed event
+        const prizeClaimedEvent = events.find((event: any) => {
+          const keys = event.keys || []
+          // PrizeClaimed event key (you may need to adjust this)
+          return keys.length > 0 && event.data && event.data.length >= 4
+        })
+        
+        if (prizeClaimedEvent && prizeClaimedEvent.data) {
+          // Event data structure: [giveaway_id, code_hash, winner, amount_low, amount_high]
+          // The amount is a u256, so it's split into low and high
+          const data = prizeClaimedEvent.data
+          console.log('Prize claimed event data:', data)
+          
+          // Amount is at index 3 and 4 (low and high parts of u256)
+          const amountLow = BigInt(data[data.length - 2] || "0")
+          const amountHigh = BigInt(data[data.length - 1] || "0")
+          
+          // Combine u256 parts: amount = low + (high * 2^128)
+          const amountWei = amountLow + (amountHigh << 128n)
+          
+          // Convert from wei (18 decimals) to STRK
+          const amountStrk = Number(amountWei) / 1e18
+          amount = amountStrk.toFixed(2)
+          
+          console.log('Extracted amount:', {
+            amountLow: amountLow.toString(),
+            amountHigh: amountHigh.toString(),
+            amountWei: amountWei.toString(),
+            amountStrk: amount
+          })
+        } else {
+          console.warn('PrizeClaimed event not found in transaction')
+          // Fallback: try to get from receipt or show placeholder
+          amount = "???"
+        }
+      } catch (error) {
+        console.error('Error parsing event data:', error)
+        amount = "???"
+      }
+      
       setPrizeAmount(amount)
       
       setClaimState("claimed")
@@ -118,14 +181,45 @@ export default function ClaimPage() {
     } catch (error: any) {
       console.error("Error claiming prize:", error)
       
-      // Check if it's an invalid code error
-      if (error.message?.includes("INVALID_CODE") || error.message?.includes("PRIZE_ALREADY_CLAIMED")) {
-        setClaimState("invalid")
+      const errorMessage = error.message || error.toString() || ""
+      let userMessage = "Failed to claim prize. Please try again."
+      let errorTitle = "Claim Failed"
+      
+      // Check for specific error patterns
+      if (errorMessage.includes("ENTRYPOINT_FAILED") || errorMessage.includes("execution error")) {
+        // Parse Cairo error messages
+        if (errorMessage.includes("ADDRESS_ALREADY_CLAIMED") || 
+            errorMessage.toLowerCase().includes("already claimed")) {
+          errorTitle = "Already Claimed"
+          userMessage = "You have already claimed a prize from this giveaway. Each wallet can only claim once per giveaway."
+          setClaimState("invalid")
+        } else if (errorMessage.includes("PRIZE_ALREADY_CLAIMED") || 
+                   errorMessage.includes("INVALID_CODE")) {
+          errorTitle = "Invalid Code"
+          userMessage = "This code is invalid or has already been used by another user."
+          setClaimState("invalid")
+        } else if (errorMessage.includes("GIVEAWAY_NOT_FOUND")) {
+          errorTitle = "Giveaway Not Found"
+          userMessage = "The giveaway name you entered does not exist. Please check the name and try again."
+        } else if (errorMessage.includes("GIVEAWAY_EXPIRED")) {
+          errorTitle = "Giveaway Expired"
+          userMessage = "This giveaway has expired and is no longer accepting claims."
+        } else if (errorMessage.includes("GIVEAWAY_INACTIVE")) {
+          errorTitle = "Giveaway Inactive"
+          userMessage = "This giveaway is not currently active."
+        } else {
+          // Generic execution error
+          userMessage = "The transaction failed. The code may be invalid, already claimed, or you may have already claimed from this giveaway."
+          setClaimState("invalid")
+        }
+      } else if (errorMessage.includes("User rejected") || errorMessage.includes("User denied")) {
+        errorTitle = "Transaction Cancelled"
+        userMessage = "You cancelled the transaction."
       }
       
       toast({
-        title: "Claim Failed",
-        description: error.message || "Failed to claim prize. The code may be invalid or already claimed.",
+        title: errorTitle,
+        description: userMessage,
         variant: "destructive",
       })
     } finally {
@@ -156,18 +250,17 @@ export default function ClaimPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="giveawayId">Giveaway ID</Label>
+                  <Label htmlFor="giveawayName">Giveaway Name</Label>
                   <Input
-                    id="giveawayId"
-                    type="number"
-                    placeholder="1"
-                    value={giveawayId}
-                    onChange={(e) => setGiveawayId(e.target.value)}
+                    id="giveawayName"
+                    type="text"
+                    placeholder="e.g., Summer2024"
+                    value={giveawayName}
+                    onChange={(e) => setGiveawayName(e.target.value)}
                     className="text-center"
-                    min="1"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Enter the giveaway ID you want to claim from
+                    Enter the giveaway name you want to claim from
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -207,6 +300,7 @@ export default function ClaimPage() {
                 <Button
                   onClick={() => {
                     setClaimState("initial")
+                    setGiveawayName("")
                     setClaimCode("")
                   }}
                   variant="outline"
@@ -292,6 +386,7 @@ export default function ClaimPage() {
                   <Button
                     onClick={() => {
                       setClaimState("initial")
+                      setGiveawayName("")
                       setClaimCode("")
                       setPrizeAmount("")
                       setTxHash("")

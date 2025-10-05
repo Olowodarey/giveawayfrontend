@@ -40,6 +40,7 @@ interface Winner {
 }
 
 interface GiveawayData {
+  name: string;
   totalPrize: string;
   expiryHours: string;
 }
@@ -47,6 +48,7 @@ interface GiveawayData {
 export default function CreatePage() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<GiveawayData>({
+    name: "",
     totalPrize: "",
     expiryHours: "24",
   });
@@ -91,10 +93,10 @@ export default function CreatePage() {
   };
 
   const validateForm = () => {
-    if (!formData.totalPrize || !formData.expiryHours) {
+    if (!formData.name || !formData.totalPrize || !formData.expiryHours) {
       toast({
         title: "Missing Information",
-        description: "Please fill in total prize and expiry time",
+        description: "Please fill in giveaway name, total prize and expiry time",
         variant: "destructive",
       });
       return false;
@@ -236,7 +238,13 @@ export default function CreatePage() {
         description: "Depositing STRK and creating giveaway...",
       });
 
+      // Convert giveaway name to felt252
+      const giveawayNameFelt = codeToFelt(formData.name);
+      console.log('Giveaway name:', formData.name);
+      console.log('Giveaway name as felt:', giveawayNameFelt);
+
       const calldata = [
+        giveawayNameFelt,
         totalU256.low,
         totalU256.high,
         codeHashes.length.toString(),
@@ -250,6 +258,7 @@ export default function CreatePage() {
       console.log('Calldata being sent:', calldata)
       console.log('Calldata length:', calldata.length)
       console.log('Calldata breakdown:', {
+        name: giveawayNameFelt,
         totalLow: totalU256.low,
         totalHigh: totalU256.high,
         numCodes: codeHashes.length,
@@ -258,7 +267,7 @@ export default function CreatePage() {
         prizes: prizeAmounts.flat(),
         expiry: formData.expiryHours
       })
-      console.log('Expected format: [total_low, total_high, num_codes, ...codes, num_prizes, ...prizes_flat, expiry]')
+      console.log('Expected format: [name, total_low, total_high, num_codes, ...codes, num_prizes, ...prizes_flat, expiry]')
       console.log('Contract address:', GIVEAWAY_CONTRACT_ADDRESS)
       console.log('=== END DEBUG ===')
 
@@ -372,6 +381,23 @@ export default function CreatePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Giveaway Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="e.g., Summer2024"
+                    value={formData.name}
+                    onChange={(e) =>
+                      handleInputChange("name", e.target.value)
+                    }
+                    maxLength={31}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    A unique identifier for your giveaway (max 31 characters)
+                  </p>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="totalPrize">Total Prize Pool (STRK)</Label>
                   <Input
@@ -502,6 +528,14 @@ export default function CreatePage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4 p-4 rounded-lg bg-muted/50">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">
+                      Giveaway Name
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {formData.name}
+                    </span>
+                  </div>
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">
                       Total Prize Pool
