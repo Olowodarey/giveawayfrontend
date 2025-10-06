@@ -14,10 +14,11 @@ import { GIVEAWAY_CONTRACT_ADDRESS, GIVEAWAY_ABI } from "@/lib/contract-config"
 import { useWallet, useWalletPin } from "@/contexts/wallet-context"
 import { useAuth } from "@clerk/nextjs"
 import { Contract, RpcProvider } from "starknet"
-import { u256ToStrk } from "@/lib/contract-utils"
+import { u256ToStrk, codeToFelt } from "@/lib/contract-utils"
 
 interface Giveaway {
   id: string
+  name: string
   totalAmount: number
   numWinners: number
   claimed: number
@@ -102,6 +103,7 @@ export default function DashboardPage() {
       const info = await contract.get_giveaway_info(giveawayId)
       
       // Parse the response
+      const name = info.name
       const creator = info.creator
       const totalAmount = parseFloat(u256ToStrk(info.total_amount.low.toString(), info.total_amount.high.toString()))
       const numWinners = Number(info.num_winners)
@@ -127,6 +129,7 @@ export default function DashboardPage() {
       
       return {
         id: giveawayId.toString(),
+        name: name.toString(),
         totalAmount,
         numWinners,
         claimed: claimedCount,
@@ -194,8 +197,8 @@ export default function DashboardPage() {
         throw new Error("Failed to get authentication token")
       }
 
-      // The giveaway ID should be a number from the actual contract
-      const giveawayId = giveaway.id
+      // Convert giveaway name to felt252 for the contract call
+      const nameFelt = codeToFelt(giveaway.name)
 
       toast({
         title: "Reclaiming Funds",
@@ -212,7 +215,7 @@ export default function DashboardPage() {
             {
               contractAddress: GIVEAWAY_CONTRACT_ADDRESS,
               entrypoint: "reclaim_funds",
-              calldata: [giveawayId],
+              calldata: [nameFelt],
             },
           ],
         },

@@ -23,7 +23,7 @@ import { Footer } from "@/components/footer";
 import Confetti from "react-confetti";
 import { useWindowSize } from "@/hooks/use-window-size";
 import { useCallAnyContract } from "@chipi-stack/nextjs";
-import { codeToFelt252 } from "@/lib/contract-utils";
+import { codeToFelt252, codeToFelt } from "@/lib/contract-utils";
 import { GIVEAWAY_CONTRACT_ADDRESS } from "@/lib/contract-config";
 import { useWallet, useWalletPin } from "@/contexts/wallet-context";
 import { useAuth } from "@clerk/nextjs";
@@ -37,7 +37,7 @@ export default function ClaimPage() {
   const [txHash, setTxHash] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
-  const [giveawayId, setGiveawayId] = useState("1"); // Default to giveaway 1
+  const [giveawayName, setGiveawayName] = useState(""); // Giveaway name instead of ID
 
   const { toast } = useToast();
   const { width, height } = useWindowSize();
@@ -47,6 +47,15 @@ export default function ClaimPage() {
   const { callAnyContractAsync } = useCallAnyContract();
 
   const validateCode = () => {
+    if (!giveawayName.trim()) {
+      toast({
+        title: "Missing Giveaway Name",
+        description: "Please enter the giveaway name",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!claimCode.trim()) {
       toast({
         title: "Missing Code",
@@ -88,7 +97,8 @@ export default function ClaimPage() {
         throw new Error("Failed to get authentication token");
       }
 
-      // Step 2: Convert claim code to felt252
+      // Step 2: Convert giveaway name and claim code to felt252
+      const nameFelt = codeToFelt(giveawayName);
       const codeFelt = codeToFelt252(claimCode);
 
       // Step 3: Call claim_prize on contract
@@ -102,8 +112,8 @@ export default function ClaimPage() {
               contractAddress: GIVEAWAY_CONTRACT_ADDRESS,
               entrypoint: "claim_prize",
               calldata: [
-                giveawayId, // giveaway_id
-                codeFelt, // code
+                nameFelt, // giveaway name (felt252)
+                codeFelt, // code (felt252)
               ],
             },
           ],
@@ -186,18 +196,17 @@ export default function ClaimPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="giveawayId">Giveaway ID</Label>
+                  <Label htmlFor="giveawayName">Giveaway Name</Label>
                   <Input
-                    id="giveawayId"
-                    type="number"
-                    placeholder="1"
-                    value={giveawayId}
-                    onChange={(e) => setGiveawayId(e.target.value)}
+                    id="giveawayName"
+                    type="text"
+                    placeholder="e.g., MyGiveaway"
+                    value={giveawayName}
+                    onChange={(e) => setGiveawayName(e.target.value)}
                     className="text-center"
-                    min="1"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Enter the giveaway ID you want to claim from
+                    Enter the giveaway name you want to claim from
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -240,6 +249,7 @@ export default function ClaimPage() {
                 <Button
                   onClick={() => {
                     setClaimState("initial");
+                    setGiveawayName("");
                     setClaimCode("");
                   }}
                   variant="outline"
@@ -346,6 +356,7 @@ export default function ClaimPage() {
                   <Button
                     onClick={() => {
                       setClaimState("initial");
+                      setGiveawayName("");
                       setClaimCode("");
                       setPrizeAmount("");
                       setTxHash("");
