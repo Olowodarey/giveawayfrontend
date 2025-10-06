@@ -34,12 +34,29 @@ interface ClaimDetail {
   claimedAt: string
 }
 
+interface ClaimedPrize {
+  giveawayId: string
+  giveawayName: string
+  amount: number
+  claimedAt: string
+}
+
+interface UserStats {
+  createdCount: number
+  claimedCount: number
+  totalClaimedAmount: number
+}
+
 export default function DashboardPage() {
   const [selectedGiveaway, setSelectedGiveaway] = useState<Giveaway | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [isReclaiming, setIsReclaiming] = useState(false)
   const [giveaways, setGiveaways] = useState<Giveaway[]>([])
   const [isLoadingGiveaways, setIsLoadingGiveaways] = useState(true)
+  const [claimedPrizes, setClaimedPrizes] = useState<ClaimedPrize[]>([])
+  const [userStats, setUserStats] = useState<UserStats | null>(null)
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'reclaimable'>('all')
+  const [reclaimableGiveaways, setReclaimableGiveaways] = useState<Giveaway[]>([])
   const { toast } = useToast()
   const { wallet, isConnected } = useWallet()
   const walletPin = useWalletPin()
@@ -50,47 +67,39 @@ export default function DashboardPage() {
   const provider = new RpcProvider({ nodeUrl: 'https://starknet-mainnet.public.blastapi.io' })
   const contract = new Contract(GIVEAWAY_ABI, GIVEAWAY_CONTRACT_ADDRESS, provider)
 
-  // Fetch real giveaway data from contract
+  // Fetch user's giveaways using the new efficient contract function
   const fetchGiveaways = async () => {
     setIsLoadingGiveaways(true)
     try {
-      // Get total giveaway count from contract
-      const countResult = await contract.get_giveaway_count()
-      const totalCount = Number(countResult)
-      
-      console.log('Total giveaways on contract:', totalCount)
-      
-      if (totalCount === 0) {
+      if (!wallet?.address) {
         setGiveaways([])
         setIsLoadingGiveaways(false)
         return
       }
+
+      console.log('Fetching giveaways for user:', wallet.address)
       
-      // Fetch all giveaways
-      const giveawayPromises = []
-      for (let i = 1; i <= totalCount; i++) {
-        giveawayPromises.push(fetchGiveawayInfo(i))
+      // Use the new get_user_created_giveaways function
+      const userGiveaways = await contract.get_user_created_giveaways(
+        wallet.address,
+        0, // offset
+        100 // limit - fetch up to 100 giveaways
+      )
+      
+      console.log('User giveaways from contract:', userGiveaways)
+      
+      // Parse the giveaways
+      const parsedGiveaways: Giveaway[] = []
+      for (let i = 0; i < userGiveaways.length; i++) {
+        const giveaway = userGiveaways[i]
+        const parsed = parseUserGiveaway(giveaway)
+        if (parsed) {
+          parsedGiveaways.push(parsed)
+        }
       }
       
-      const allGiveaways = await Promise.all(giveawayPromises)
-      
-      // Filter to only show user's giveaways if wallet is connected
-      let userGiveaways = allGiveaways.filter(g => g !== null) as Giveaway[]
-      
-      console.log('All giveaways fetched:', userGiveaways)
-      console.log('Connected wallet address:', wallet?.address)
-      
-      if (wallet?.address) {
-        const walletAddressNormalized = wallet.address.toLowerCase().replace(/^0x0+/, '0x')
-        userGiveaways = userGiveaways.filter(g => {
-          const creatorNormalized = g.creator?.toLowerCase().replace(/^0x0+/, '0x')
-          console.log('Comparing:', { creator: creatorNormalized, wallet: walletAddressNormalized })
-          return creatorNormalized === walletAddressNormalized
-        })
-      }
-      
-      console.log('User giveaways after filter:', userGiveaways)
-      setGiveaways(userGiveaways)
+      console.log('Parsed giveaways:', parsedGiveaways)
+      setGiveaways(parsedGiveaways)
     } catch (error) {
       console.error('Error fetching giveaways:', error)
       setGiveaways([])
@@ -103,33 +112,20 @@ export default function DashboardPage() {
       setIsLoadingGiveaways(false)
     }
   }
-  
-  const fetchGiveawayInfo = async (giveawayId: number): Promise<Giveaway | null> => {
+
+  // Parse UserCreatedGiveaway struct from contract
+  const parseUserGiveaway = (giveaway: any): Giveaway | null => {
     try {
-      const info = await contract.get_giveaway_info(giveawayId)
-      
-      console.log(`Giveaway ${giveawayId} raw info:`, info)
-      
-      // Safely parse the response with fallbacks
-      const name = info?.name ? feltToString(info.name) : `Giveaway #${giveawayId}`
-      const creator = info?.creator || '0x0'
-      const totalAmount = info?.total_amount 
-        ? parseFloat(u256ToStrk(info.total_amount.low?.toString() || '0', info.total_amount.high?.toString() || '0'))
+      const giveawayId = giveaway?.giveaway_id ? Number(giveaway.giveaway_id) : 0
+      const name = giveaway?.name ? feltToString(giveaway.name) : `Giveaway #${giveawayId}`
+      const totalAmount = giveaway?.total_amount 
+        ? parseFloat(u256ToStrk(giveaway.total_amount.low?.toString() || '0', giveaway.total_amount.high?.toString() || '0'))
         : 0
-      const numWinners = info?.num_winners ? Number(info.num_winners) : 0
-      const claimedCount = info?.claimed_count ? Number(info.claimed_count) : 0
-      const expiryTime = info?.expiry_time ? Number(info.expiry_time) : 0
-      const isActive = info?.is_active !== undefined ? info.is_active : false
-      
-      console.log(`Giveaway ${giveawayId} parsed:`, {
-        name,
-        creator: creator?.toString ? creator.toString() : String(creator),
-        totalAmount,
-        numWinners,
-        claimedCount,
-        expiryTime,
-        isActive
-      })
+      const numWinners = giveaway?.num_winners ? Number(giveaway.num_winners) : 0
+      const claimedCount = giveaway?.claimed_count ? Number(giveaway.claimed_count) : 0
+      const createdAt = giveaway?.created_at ? Number(giveaway.created_at) : 0
+      const expiryTime = giveaway?.expiry_time ? Number(giveaway.expiry_time) : 0
+      const isActive = giveaway?.is_active !== undefined ? giveaway.is_active : false
       
       // Determine status
       const now = Math.floor(Date.now() / 1000)
@@ -145,33 +141,127 @@ export default function DashboardPage() {
       
       // Calculate dates
       const expiryDate = new Date(expiryTime * 1000)
-      const createdDate = new Date(expiryDate.getTime() - 24 * 60 * 60 * 1000) // Assume created 24h before expiry
+      const createdDate = createdAt > 0 ? new Date(createdAt * 1000) : new Date(expiryDate.getTime() - 24 * 60 * 60 * 1000)
       
       return {
         id: giveawayId.toString(),
-        name: name,
+        name,
         totalAmount,
         numWinners,
         claimed: claimedCount,
         status,
         createdAt: createdDate.toISOString().split('T')[0],
         expiresAt: expiryDate.toISOString().split('T')[0],
-        creator: creator?.toString ? creator.toString() : String(creator),
+        creator: wallet?.address || '',
       }
     } catch (error) {
-      console.error(`Error fetching giveaway ${giveawayId}:`, error)
+      console.error('Error parsing giveaway:', error, giveaway)
       return null
+    }
+  }
+  
+  // Fetch user stats
+  const fetchUserStats = async () => {
+    try {
+      if (!wallet?.address) return
+      
+      const stats = await contract.get_user_stats(wallet.address)
+      console.log('User stats:', stats)
+      
+      const createdCount = Number(stats[0])
+      const claimedCount = Number(stats[1])
+      const totalClaimedAmount = parseFloat(u256ToStrk(stats[2].low?.toString() || '0', stats[2].high?.toString() || '0'))
+      
+      setUserStats({
+        createdCount,
+        claimedCount,
+        totalClaimedAmount
+      })
+    } catch (error) {
+      console.error('Error fetching user stats:', error)
+    }
+  }
+
+  // Fetch claimed prizes
+  const fetchClaimedPrizes = async () => {
+    try {
+      if (!wallet?.address) return
+      
+      const prizes = await contract.get_user_claimed_prizes(
+        wallet.address,
+        0, // offset
+        50 // limit
+      )
+      
+      console.log('Claimed prizes:', prizes)
+      
+      const parsedPrizes: ClaimedPrize[] = []
+      for (let i = 0; i < prizes.length; i++) {
+        const prize = prizes[i]
+        parsedPrizes.push({
+          giveawayId: prize.giveaway_id?.toString() || '0',
+          giveawayName: feltToString(prize.giveaway_name),
+          amount: parseFloat(u256ToStrk(prize.amount.low?.toString() || '0', prize.amount.high?.toString() || '0')),
+          claimedAt: new Date(Number(prize.claimed_at) * 1000).toISOString().split('T')[0]
+        })
+      }
+      
+      setClaimedPrizes(parsedPrizes)
+    } catch (error) {
+      console.error('Error fetching claimed prizes:', error)
+    }
+  }
+
+  // Fetch reclaimable giveaways
+  const fetchReclaimableGiveaways = async () => {
+    try {
+      if (!wallet?.address) return
+      
+      const reclaimable = await contract.get_reclaimable_giveaways(wallet.address)
+      console.log('Reclaimable giveaways:', reclaimable)
+      
+      const parsedGiveaways: Giveaway[] = []
+      for (let i = 0; i < reclaimable.length; i++) {
+        const giveaway = reclaimable[i]
+        const parsed = parseUserGiveaway(giveaway)
+        if (parsed) {
+          parsedGiveaways.push(parsed)
+        }
+      }
+      
+      setReclaimableGiveaways(parsedGiveaways)
+    } catch (error) {
+      console.error('Error fetching reclaimable giveaways:', error)
     }
   }
 
   useEffect(() => {
-    fetchGiveaways()
+    if (wallet?.address) {
+      fetchGiveaways()
+      fetchUserStats()
+      fetchClaimedPrizes()
+      fetchReclaimableGiveaways()
+    }
   }, [wallet?.address])
 
-  const totalGiveaways = giveaways.length
+  const totalGiveaways = userStats?.createdCount || giveaways.length
   const totalDistributed = giveaways.reduce((sum, g) => sum + (g.totalAmount * g.claimed) / g.numWinners, 0)
-  const totalClaimed = giveaways.reduce((sum, g) => sum + g.claimed, 0)
+  const totalClaimed = userStats?.claimedCount || 0
   const activeGiveaways = giveaways.filter((g) => g.status === "active").length
+
+  // Get filtered giveaways based on active tab
+  const getFilteredGiveaways = () => {
+    switch (activeTab) {
+      case 'active':
+        return giveaways.filter(g => g.status === 'active')
+      case 'reclaimable':
+        return reclaimableGiveaways
+      default:
+        return giveaways
+    }
+  }
+
+  const filteredGiveaways = getFilteredGiveaways()
 
   const getStatusColor = (status: Giveaway["status"]) => {
     switch (status) {
@@ -309,8 +399,13 @@ export default function DashboardPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Total Claims</p>
+                    <p className="text-sm text-muted-foreground mb-1">Prizes Won</p>
                     <p className="text-2xl font-bold text-foreground">{totalClaimed}</p>
+                    {userStats && userStats.totalClaimedAmount > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {userStats.totalClaimedAmount.toFixed(2)} STRK earned
+                      </p>
+                    )}
                   </div>
                   <div className="h-12 w-12 rounded-lg bg-success/10 flex items-center justify-center">
                     <Users className="h-6 w-6 text-success" />
@@ -334,27 +429,68 @@ export default function DashboardPage() {
             </Card>
           </div>
 
+          {/* Claimed Prizes Section */}
+          {claimedPrizes.length > 0 && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Your Claimed Prizes</CardTitle>
+                <CardDescription>Prizes you've won from giveaways</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {claimedPrizes.map((prize, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-border">
+                      <div>
+                        <p className="font-medium text-foreground">{prize.giveawayName}</p>
+                        <p className="text-sm text-muted-foreground">Claimed on {prize.claimedAt}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-success">{prize.amount.toFixed(4)} STRK</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Giveaways Table */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <CardTitle>Your Giveaways</CardTitle>
                   <CardDescription>View and manage all your created giveaways</CardDescription>
                 </div>
-                <Button
-                  onClick={fetchGiveaways}
-                  variant="outline"
-                  size="sm"
-                  disabled={isLoadingGiveaways}
-                >
-                  {isLoadingGiveaways ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="h-4 w-4" />
-                  )}
-                  <span className="ml-2">Refresh</span>
-                </Button>
+                <div className="flex items-center gap-2">
+                  {/* Tab Buttons */}
+                  <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+                    <Button
+                      onClick={() => setActiveTab('all')}
+                      variant={activeTab === 'all' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="text-xs"
+                    >
+                      All ({giveaways.length})
+                    </Button>
+                    <Button
+                      onClick={() => setActiveTab('active')}
+                      variant={activeTab === 'active' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="text-xs"
+                    >
+                      Active ({activeGiveaways})
+                    </Button>
+                    <Button
+                      onClick={() => setActiveTab('reclaimable')}
+                      variant={activeTab === 'reclaimable' ? 'default' : 'ghost'}
+                      size="sm"
+                      className="text-xs"
+                    >
+                      Reclaimable ({reclaimableGiveaways.length})
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -365,13 +501,21 @@ export default function DashboardPage() {
                     <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
                     <span className="text-muted-foreground">Loading giveaways from blockchain...</span>
                   </div>
-                ) : giveaways.length === 0 ? (
+                ) : filteredGiveaways.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="text-muted-foreground mb-4">No giveaways found.</div>
-                    <Button onClick={() => window.location.href = '/create'}>Create Your First Giveaway</Button>
+                    <div className="text-muted-foreground mb-4">
+                      {activeTab === 'reclaimable' 
+                        ? 'No reclaimable giveaways found.'
+                        : activeTab === 'active'
+                        ? 'No active giveaways found.'
+                        : 'No giveaways found.'}
+                    </div>
+                    {activeTab === 'all' && (
+                      <Button onClick={() => window.location.href = '/create'}>Create Your First Giveaway</Button>
+                    )}
                   </div>
                 ) : (
-                  giveaways.map((giveaway) => (
+                  filteredGiveaways.map((giveaway) => (
                   <Card key={giveaway.id} className="border-border">
                     <CardContent className="pt-4 space-y-3">
                       <div className="flex items-center justify-between">
@@ -464,7 +608,7 @@ export default function DashboardPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {giveaways.map((giveaway) => (
+                      {filteredGiveaways.map((giveaway) => (
                       <TableRow key={giveaway.id}>
                         <TableCell className="font-medium">{giveaway.id}</TableCell>
                         <TableCell className="font-mono text-sm">{giveaway.name}</TableCell>

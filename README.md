@@ -16,7 +16,7 @@ A Twitter giveaway platform built on Starknet where users can't see prize amount
 ### Smart Contract
 
 - **Network**: Starknet Sepolia Testnet
-- **Contract Address**: `0x077af435e43da39a5c75ea90ea143abfdbb03e812a71803a21b1ad0d065f3847`
+- **Contract Address**: `0x06fbd658842c866343e15477ff1dc9bcdc438446da3dd28a6a21a4bffd2f3d83`
 - **Token**: STRK (Starknet Token)
 
 ### Frontend
@@ -57,7 +57,7 @@ Create a `.env.local` file in the root directory:
 NEXT_PUBLIC_CHIPI_API_KEY=pk_prod_your_api_key_here
 
 # Starknet Contract Configuration
-NEXT_PUBLIC_GIVEAWAY_CONTRACT_ADDRESS=0x077af435e43da39a5c75ea90ea143abfdbb03e812a71803a21b1ad0d065f3847
+NEXT_PUBLIC_GIVEAWAY_CONTRACT_ADDRESS=0x06fbd658842c866343e15477ff1dc9bcdc438446da3dd28a6a21a4bffd2f3d83
 
 # STRK Token Address on Sepolia
 NEXT_PUBLIC_STRK_TOKEN_ADDRESS=0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
@@ -224,7 +224,7 @@ This project is open source and available under the MIT License.
 
 - [ChipiPay Documentation](https://docs.chipipay.com/)
 - [Starknet Documentation](https://docs.starknet.io/)
-- [Contract on Starkscan](https://sepolia.starkscan.co/contract/0x077af435e43da39a5c75ea90ea143abfdbb03e812a71803a21b1ad0d065f3847)
+- [Contract on Starkscan](https://sepolia.starkscan.co/contract/0x06fbd658842c866343e15477ff1dc9bcdc438446da3dd28a6a21a4bffd2f3d83)
 
 ## 💡 Future Enhancements
 
