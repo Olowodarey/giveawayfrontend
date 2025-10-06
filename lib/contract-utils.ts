@@ -92,3 +92,49 @@ export function codeToFelt252(code: string): string {
   const hex = Buffer.from(code, "utf-8").toString("hex");
   return `0x${hex}`;
 }
+
+/**
+ * Convert felt252 back to string (Cairo short string encoding)
+ */
+export function feltToString(felt: any): string {
+  try {
+    if (!felt) return '';
+    
+    // Convert felt to BigInt
+    let feltBigInt: bigint;
+    if (typeof felt === 'bigint') {
+      feltBigInt = felt;
+    } else if (typeof felt === 'string') {
+      feltBigInt = BigInt(felt);
+    } else if (typeof felt === 'object' && felt.toString) {
+      feltBigInt = BigInt(felt.toString());
+    } else {
+      feltBigInt = BigInt(felt);
+    }
+    
+    // If it's 0, return empty string
+    if (feltBigInt === 0n) return '';
+    
+    // Convert BigInt to hex string
+    let hexStr = feltBigInt.toString(16);
+    
+    // Pad to even length
+    if (hexStr.length % 2 !== 0) {
+      hexStr = '0' + hexStr;
+    }
+    
+    // Decode hex to ASCII string
+    let result = '';
+    for (let i = 0; i < hexStr.length; i += 2) {
+      const byte = parseInt(hexStr.substring(i, i + 2), 16);
+      if (byte !== 0) {
+        result += String.fromCharCode(byte);
+      }
+    }
+    
+    return result.trim() || feltBigInt.toString();
+  } catch (error) {
+    console.error('Error converting felt to string:', error, felt);
+    return String(felt);
+  }
+}

@@ -29,9 +29,11 @@ import { hashClaimCodes, strkToU256, codeToFelt } from "@/lib/contract-utils";
 import {
   GIVEAWAY_CONTRACT_ADDRESS,
   STRK_TOKEN_ADDRESS,
+  GIVEAWAY_ABI,
 } from "@/lib/contract-config";
 import { useWallet, useWalletPin } from "@/contexts/wallet-context";
 import { useAuth } from "@clerk/nextjs";
+import { Contract, RpcProvider } from "starknet";
 
 interface Winner {
   id: string;
@@ -195,6 +197,27 @@ export default function CreatePage() {
     setIsCreating(true);
 
     try {
+      // Check if giveaway name already exists
+      try {
+        const provider = new RpcProvider({ nodeUrl: 'https://starknet-mainnet.public.blastapi.io' });
+        const contract = new Contract(GIVEAWAY_ABI, GIVEAWAY_CONTRACT_ADDRESS, provider);
+        const nameFelt = codeToFelt(formData.name);
+        
+        const existingId = await contract.get_giveaway_id_by_name(nameFelt);
+        if (existingId && Number(existingId) > 0) {
+          toast({
+            title: "Name Already Exists",
+            description: `A giveaway with the name "${formData.name}" already exists. Please choose a different name.`,
+            variant: "destructive",
+          });
+          setIsCreating(false);
+          return;
+        }
+      } catch (nameCheckError) {
+        // If error is "Giveaway not found", that's good - name is available
+        console.log("Name check result:", nameCheckError);
+      }
+
       const bearerToken = await getToken({ template: "giveawayapp" });
       if (!bearerToken) {
         throw new Error("Failed to get authentication token");
@@ -208,16 +231,6 @@ export default function CreatePage() {
 
       console.log("Codes:", codes);
       console.log("Hashed codes:", codeHashes);
-
-      // Convert prize amounts to u256 format
-      const prizeAmounts = winners.map((w) => {
-        const u256Amount = strkToU256(w.amount);
-        console.log(`Converting ${w.amount} STRK to u256:`, u256Amount);
-        return [u256Amount.low, u256Amount.high];
-      });
-
-      console.log("Prize amounts (u256) array:", prizeAmounts);
-      console.log("Prize amounts flattened:", prizeAmounts.flat());
 
       // Convert total amount to u256
       const totalU256 = strkToU256(formData.totalPrize);
@@ -264,33 +277,36 @@ export default function CreatePage() {
       console.log("Giveaway name:", formData.name);
       console.log("Giveaway name as felt:", giveawayNameFelt);
 
+      // Format prize amounts - flatten each u256 to [low, high]
+      const prizeAmountsFlattened: string[] = [];
+      winners.forEach((w) => {
+        const u256Amount = strkToU256(w.amount);
+        prizeAmountsFlattened.push(u256Amount.low);
+        prizeAmountsFlattened.push(u256Amount.high);
+      });
+
+      // Build calldata manually with proper array formatting
       const calldata = [
-        giveawayNameFelt,
-        totalU256.low,
-        totalU256.high,
-        codeHashes.length.toString(),
-        ...codeHashes,
-        prizeAmounts.length.toString(),
-        ...prizeAmounts.flat(),
-        formData.expiryHours,
+        giveawayNameFelt,                    // name: felt252
+        totalU256.low,                       // total_amount.low: u128
+        totalU256.high,                      // total_amount.high: u128
+        codeHashes.length.toString(),        // code_hashes array length
+        ...codeHashes,                       // code_hashes array elements
+        winners.length.toString(),           // prize_amounts array length (number of u256s)
+        ...prizeAmountsFlattened,           // prize_amounts flattened (low, high, low, high, ...)
+        formData.expiryHours,               // expiry_hours: u64
       ];
 
       console.log("=== CALLDATA DEBUG ===");
-      console.log("Calldata being sent:", calldata);
+      console.log("Giveaway name (felt):", giveawayNameFelt);
+      console.log("Total amount (u256):", totalU256);
+      console.log("Code hashes count:", codeHashes.length);
+      console.log("Code hashes:", codeHashes);
+      console.log("Prize amounts count:", winners.length);
+      console.log("Prize amounts flattened:", prizeAmountsFlattened);
+      console.log("Expiry hours:", formData.expiryHours);
+      console.log("Full calldata:", calldata);
       console.log("Calldata length:", calldata.length);
-      console.log("Calldata breakdown:", {
-        name: giveawayNameFelt,
-        totalLow: totalU256.low,
-        totalHigh: totalU256.high,
-        numCodes: codeHashes.length,
-        codes: codeHashes,
-        numPrizes: prizeAmounts.length,
-        prizes: prizeAmounts.flat(),
-        expiry: formData.expiryHours,
-      });
-      console.log(
-        "Expected format: [name, total_low, total_high, num_codes, ...codes, num_prizes, ...prizes_flat, expiry]"
-      );
       console.log("Contract address:", GIVEAWAY_CONTRACT_ADDRESS);
       console.log("=== END DEBUG ===");
 
@@ -303,7 +319,7 @@ export default function CreatePage() {
             {
               contractAddress: GIVEAWAY_CONTRACT_ADDRESS,
               entrypoint: "create_giveaway",
-              calldata,
+              calldata: calldata,
             },
           ],
         },
@@ -415,7 +431,7 @@ export default function CreatePage() {
                     maxLength={31}
                   />
                   <p className="text-xs text-muted-foreground">
-                    A unique identifier for your giveaway (max 31 characters)
+                    A unique identifier for your giveaway (max 31 characters). Each giveaway must have a different name.
                   </p>
                 </div>
 

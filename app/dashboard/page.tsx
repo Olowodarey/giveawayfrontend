@@ -14,7 +14,7 @@ import { GIVEAWAY_CONTRACT_ADDRESS, GIVEAWAY_ABI } from "@/lib/contract-config"
 import { useWallet, useWalletPin } from "@/contexts/wallet-context"
 import { useAuth } from "@clerk/nextjs"
 import { Contract, RpcProvider } from "starknet"
-import { u256ToStrk, codeToFelt } from "@/lib/contract-utils"
+import { u256ToStrk, codeToFelt, feltToString } from "@/lib/contract-utils"
 
 interface Giveaway {
   id: string
@@ -77,13 +77,19 @@ export default function DashboardPage() {
       // Filter to only show user's giveaways if wallet is connected
       let userGiveaways = allGiveaways.filter(g => g !== null) as Giveaway[]
       
+      console.log('All giveaways fetched:', userGiveaways)
+      console.log('Connected wallet address:', wallet?.address)
+      
       if (wallet?.address) {
-        userGiveaways = userGiveaways.filter(
-          g => g.creator?.toLowerCase() === wallet.address.toLowerCase()
-        )
+        const walletAddressNormalized = wallet.address.toLowerCase().replace(/^0x0+/, '0x')
+        userGiveaways = userGiveaways.filter(g => {
+          const creatorNormalized = g.creator?.toLowerCase().replace(/^0x0+/, '0x')
+          console.log('Comparing:', { creator: creatorNormalized, wallet: walletAddressNormalized })
+          return creatorNormalized === walletAddressNormalized
+        })
       }
       
-      console.log('User giveaways:', userGiveaways)
+      console.log('User giveaways after filter:', userGiveaways)
       setGiveaways(userGiveaways)
     } catch (error) {
       console.error('Error fetching giveaways:', error)
@@ -102,14 +108,28 @@ export default function DashboardPage() {
     try {
       const info = await contract.get_giveaway_info(giveawayId)
       
-      // Parse the response
-      const name = info.name
-      const creator = info.creator
-      const totalAmount = parseFloat(u256ToStrk(info.total_amount.low.toString(), info.total_amount.high.toString()))
-      const numWinners = Number(info.num_winners)
-      const claimedCount = Number(info.claimed_count)
-      const expiryTime = Number(info.expiry_time)
-      const isActive = info.is_active
+      console.log(`Giveaway ${giveawayId} raw info:`, info)
+      
+      // Safely parse the response with fallbacks
+      const name = info?.name ? feltToString(info.name) : `Giveaway #${giveawayId}`
+      const creator = info?.creator || '0x0'
+      const totalAmount = info?.total_amount 
+        ? parseFloat(u256ToStrk(info.total_amount.low?.toString() || '0', info.total_amount.high?.toString() || '0'))
+        : 0
+      const numWinners = info?.num_winners ? Number(info.num_winners) : 0
+      const claimedCount = info?.claimed_count ? Number(info.claimed_count) : 0
+      const expiryTime = info?.expiry_time ? Number(info.expiry_time) : 0
+      const isActive = info?.is_active !== undefined ? info.is_active : false
+      
+      console.log(`Giveaway ${giveawayId} parsed:`, {
+        name,
+        creator: creator?.toString ? creator.toString() : String(creator),
+        totalAmount,
+        numWinners,
+        claimedCount,
+        expiryTime,
+        isActive
+      })
       
       // Determine status
       const now = Math.floor(Date.now() / 1000)
@@ -129,14 +149,14 @@ export default function DashboardPage() {
       
       return {
         id: giveawayId.toString(),
-        name: name.toString(),
+        name: name,
         totalAmount,
         numWinners,
         claimed: claimedCount,
         status,
         createdAt: createdDate.toISOString().split('T')[0],
         expiresAt: expiryDate.toISOString().split('T')[0],
-        creator: creator.toString(),
+        creator: creator?.toString ? creator.toString() : String(creator),
       }
     } catch (error) {
       console.error(`Error fetching giveaway ${giveawayId}:`, error)
@@ -317,8 +337,25 @@ export default function DashboardPage() {
           {/* Giveaways Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Your Giveaways</CardTitle>
-              <CardDescription>View and manage all your created giveaways</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Your Giveaways</CardTitle>
+                  <CardDescription>View and manage all your created giveaways</CardDescription>
+                </div>
+                <Button
+                  onClick={fetchGiveaways}
+                  variant="outline"
+                  size="sm"
+                  disabled={isLoadingGiveaways}
+                >
+                  {isLoadingGiveaways ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  <span className="ml-2">Refresh</span>
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {/* Mobile View */}
@@ -416,6 +453,7 @@ export default function DashboardPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>ID</TableHead>
+                        <TableHead>Name</TableHead>
                         <TableHead>Total Amount</TableHead>
                         <TableHead>Winners</TableHead>
                         <TableHead>Claimed</TableHead>
@@ -429,6 +467,7 @@ export default function DashboardPage() {
                       {giveaways.map((giveaway) => (
                       <TableRow key={giveaway.id}>
                         <TableCell className="font-medium">{giveaway.id}</TableCell>
+                        <TableCell className="font-mono text-sm">{giveaway.name}</TableCell>
                         <TableCell>{giveaway.totalAmount} STRK</TableCell>
                         <TableCell>{giveaway.numWinners}</TableCell>
                         <TableCell>
