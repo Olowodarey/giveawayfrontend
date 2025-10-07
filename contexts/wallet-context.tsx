@@ -82,22 +82,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (existingWallet) {
           console.log("Existing wallet data:", existingWallet)
           
-          // Validate PIN by attempting to use it with the wallet
-          // This ensures the PIN can actually decrypt the private key
-          try {
-            // Try a simple operation to validate the PIN works
-            // We'll do this by attempting to get the wallet with this PIN
-            walletData = {
-              publicKey: (existingWallet as any)?.publicKey || "",
-              encryptedPrivateKey: (existingWallet as any)?.encryptedPrivateKey || "",
-              address: (existingWallet as any)?.accountAddress || (existingWallet as any)?.address || (existingWallet as any)?.publicKey || "",
-            }
-            console.log("Processed wallet data:", walletData)
-            console.log("⚠️ WARNING: PIN validation not implemented. Using PIN as-is.")
-            console.log("Make sure you're using the SAME PIN you used when creating the wallet!")
-          } catch (validationError) {
-            throw new Error("Invalid PIN. Please use the PIN you created the wallet with.")
+          walletData = {
+            publicKey: (existingWallet as any)?.publicKey || "",
+            encryptedPrivateKey: (existingWallet as any)?.encryptedPrivateKey || "",
+            address: (existingWallet as any)?.accountAddress || (existingWallet as any)?.address || (existingWallet as any)?.publicKey || "",
           }
+          console.log("Processed wallet data:", walletData)
         }
       } catch (e) {
         // Wallet doesn't exist, create new one

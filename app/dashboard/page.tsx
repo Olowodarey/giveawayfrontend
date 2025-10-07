@@ -143,6 +143,18 @@ export default function DashboardPage() {
       const expiryDate = new Date(expiryTime * 1000)
       const createdDate = createdAt > 0 ? new Date(createdAt * 1000) : new Date(expiryDate.getTime() - 24 * 60 * 60 * 1000)
       
+      // Format dates with time
+      const formatDateTime = (date: Date) => {
+        return date.toLocaleString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        })
+      }
+      
       return {
         id: giveawayId.toString(),
         name,
@@ -150,8 +162,8 @@ export default function DashboardPage() {
         numWinners,
         claimed: claimedCount,
         status,
-        createdAt: createdDate.toISOString().split('T')[0],
-        expiresAt: expiryDate.toISOString().split('T')[0],
+        createdAt: formatDateTime(createdDate),
+        expiresAt: formatDateTime(expiryDate),
         creator: wallet?.address || '',
       }
     } catch (error) {

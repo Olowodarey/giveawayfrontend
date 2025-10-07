@@ -194,9 +194,12 @@ export function ConnectWallet() {
               <p className="text-xs text-muted-foreground">
                 This PIN encrypts your wallet locally. If you're new, we'll create a wallet for you!
               </p>
-              <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 mt-2">
-                <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
-                  ⚠️ Important: If you already have a wallet, you MUST use the SAME PIN you used when you first created it. Using a different PIN will cause "Decryption failed" errors when sending tokens.
+              <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/30 mt-2">
+                <p className="text-xs text-orange-700 dark:text-orange-400 font-semibold mb-1">
+                  ⚠️ Important: Use the SAME PIN every time!
+                </p>
+                <p className="text-xs text-orange-600 dark:text-orange-300">
+                  If you already have a wallet, you <strong>MUST</strong> use the exact same PIN you used when creating it. Using a different PIN will show "Wrong Password" errors when claiming prizes or sending tokens.
                 </p>
               </div>
             </div>

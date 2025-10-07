@@ -140,20 +140,66 @@ export default function ClaimPage() {
       });
     } catch (error: any) {
       console.error("Error claiming prize:", error);
+      console.log("Full error object:", JSON.stringify(error, null, 2));
 
-      // Check if it's an invalid code error
-      if (
-        error.message?.includes("INVALID_CODE") ||
-        error.message?.includes("PRIZE_ALREADY_CLAIMED")
-      ) {
+      // Convert error to string for checking
+      const errorString = JSON.stringify(error).toLowerCase();
+      const errorMessage = (error.message || "").toLowerCase();
+
+      // Check if it's an invalid giveaway/code error from the contract FIRST
+      // This should be checked before password errors because contract errors
+      // can sometimes contain the word "failed" which might be confused with decryption
+      const isInvalidCode =
+        errorMessage.includes("invalid_code") ||
+        errorMessage.includes("prize_already_claimed") ||
+        errorMessage.includes("giveaway not found") ||
+        errorMessage.includes("giveaway does not exist") ||
+        errorMessage.includes("code not found") ||
+        errorMessage.includes("execution reverted") ||
+        errorMessage.includes("contract error") ||
+        errorMessage.includes("entrypoint") ||
+        errorMessage.includes("entry point") ||
+        errorMessage.includes("assert") ||
+        errorString.includes("invalid_code") ||
+        errorString.includes("prize_already_claimed") ||
+        errorString.includes("execution_error") ||
+        errorString.includes("transaction_execution_error") ||
+        errorString.includes("contract_error");
+
+      if (isInvalidCode) {
         setClaimState("invalid");
+        toast({
+          title: "Invalid Code or Giveaway",
+          description:
+            "This giveaway name or claim code doesn't exist, or the prize has already been claimed. Please check and try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
+      // Check if it's a decryption/password error (only if not a contract error)
+      if (
+        (errorMessage.includes("decryption failed") ||
+          errorMessage.includes("decrypt") ||
+          errorMessage.includes("unexpected value failed")) &&
+        !errorMessage.includes("contract") &&
+        !errorMessage.includes("execution")
+      ) {
+        toast({
+          title: "Wrong Password",
+          description:
+            "The password you entered is incorrect. Please try again with the correct wallet password.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Generic error
       toast({
         title: "Claim Failed",
         description:
           error.message ||
-          "Failed to claim prize. The code may be invalid or already claimed.",
+          "Failed to claim prize. Please check your giveaway name and code.",
         variant: "destructive",
       });
     } finally {
@@ -233,18 +279,29 @@ export default function ClaimPage() {
                 <div className="mx-auto h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
                   <AlertCircle className="h-8 w-8 text-destructive" />
                 </div>
-                <CardTitle className="text-2xl">Invalid Code</CardTitle>
+                <CardTitle className="text-2xl">Invalid Code or Giveaway</CardTitle>
                 <CardDescription>
-                  This code is invalid or has already been claimed
+                  This giveaway or code doesn't exist, or has already been claimed
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 space-y-2">
                   <p className="text-sm text-center text-foreground">
-                    The code{" "}
-                    <span className="font-mono font-semibold">{claimCode}</span>{" "}
-                    could not be found or has already been used.
+                    <strong>Giveaway:</strong>{" "}
+                    <span className="font-mono font-semibold">{giveawayName}</span>
                   </p>
+                  <p className="text-sm text-center text-foreground">
+                    <strong>Code:</strong>{" "}
+                    <span className="font-mono font-semibold">{claimCode}</span>
+                  </p>
+                  <p className="text-xs text-center text-muted-foreground mt-3">
+                    Please verify:
+                  </p>
+                  <ul className="text-xs text-muted-foreground space-y-1">
+                    <li>• The giveaway name is spelled correctly</li>
+                    <li>• The claim code hasn't been used already</li>
+                    <li>• The giveaway exists on-chain</li>
+                  </ul>
                 </div>
                 <Button
                   onClick={() => {
