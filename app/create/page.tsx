@@ -442,34 +442,41 @@ Use code [CODE] to claim your surprise prize! 🤫
         <div className="container mx-auto max-w-2xl">
           {/* Progress Indicator */}
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-4">
               {[1, 2, 3].map((s) => (
-                <div key={s} className="flex items-center flex-1">
-                  <div
-                    className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                      s < step
-                        ? "bg-success text-success-foreground"
-                        : s === step
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {s < step ? <Check className="h-4 w-4" /> : s}
-                  </div>
-                  {s < 3 && (
+                <div key={s} className="flex flex-col items-center flex-1">
+                  <div className="flex items-center w-full">
+                    {s > 1 && (
+                      <div
+                        className={`h-1 flex-1 rounded transition-colors ${
+                          s <= step ? "bg-success" : "bg-muted"
+                        }`}
+                      />
+                    )}
                     <div
-                      className={`h-1 flex-1 mx-2 rounded transition-colors ${
-                        s < step ? "bg-success" : "bg-muted"
-                      }`}
-                    />
-                  )}
+                      className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
+                        s < step
+                          ? "bg-success text-success-foreground"
+                          : s === step
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      } ${s === 1 ? "ml-0" : "mx-2"} ${s === 3 ? "mr-0" : ""}`}
+                    >
+                      {s < step ? <Check className="h-4 w-4" /> : s}
+                    </div>
+                    {s < 3 && (
+                      <div
+                        className={`h-1 flex-1 rounded transition-colors ${
+                          s < step ? "bg-success" : "bg-muted"
+                        }`}
+                      />
+                    )}
+                  </div>
+                  <span className="text-xs sm:text-sm text-muted-foreground mt-2">
+                    {s === 1 ? "Setup" : s === 2 ? "Review" : "Complete"}
+                  </span>
                 </div>
               ))}
-            </div>
-            <div className="flex justify-between text-xs sm:text-sm text-muted-foreground px-1">
-              <span>Details</span>
-              <span>Preview</span>
-              <span>Codes</span>
             </div>
           </div>
 
