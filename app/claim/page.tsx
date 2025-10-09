@@ -257,10 +257,18 @@ export default function ClaimPage() {
 
       if (isInvalidCode) {
         setClaimState("invalid");
+        
+        // Check if it's specifically an "already claimed" error
+        const isAlreadyClaimed = 
+          errorMessage.includes("prize_already_claimed") ||
+          errorMessage.includes("already claimed") ||
+          errorString.includes("prize_already_claimed");
+        
         toast({
           title: "Invalid Code or Giveaway",
-          description:
-            "This giveaway name or claim code doesn't exist, or the prize has already been claimed. Please check and try again.",
+          description: isAlreadyClaimed
+            ? "This prize has already been claimed. Each code can only be used once per giveaway. Please try a different code."
+            : "This giveaway name or claim code doesn't exist, or has already been claimed. Please verify the details and try again.",
           variant: "destructive",
         });
         return;
@@ -363,7 +371,7 @@ export default function ClaimPage() {
                 </div>
                 <CardTitle className="text-2xl">Invalid Code or Giveaway</CardTitle>
                 <CardDescription>
-                  This giveaway or code doesn't exist, or has already been claimed
+                  This giveaway or code doesn't exist, or the prize has already been claimed
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -382,6 +390,7 @@ export default function ClaimPage() {
                   <ul className="text-xs text-muted-foreground space-y-1">
                     <li>• The giveaway name is spelled correctly</li>
                     <li>• The claim code hasn't been used already</li>
+                    <li>• <strong>Each code can only be claimed once</strong></li>
                     <li>• The giveaway exists on-chain</li>
                   </ul>
                 </div>
