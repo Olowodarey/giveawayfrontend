@@ -17,12 +17,12 @@ import {
   Check,
   Copy,
   Download,
-  Twitter,
   Loader2,
   Plus,
   Trash2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SocialShare } from "@/components/social-share";
 import { Footer } from "@/components/footer";
 import { useCallAnyContract, useApprove } from "@chipi-stack/nextjs";
 import { hashClaimCodes, strkToU256, codeToFelt } from "@/lib/contract-utils";
@@ -310,21 +310,63 @@ export default function CreatePage() {
       console.log("Contract address:", GIVEAWAY_CONTRACT_ADDRESS);
       console.log("=== END DEBUG ===");
 
-      const result = await callAnyContractAsync({
-        params: {
-          encryptKey: walletPin,
-          wallet: wallet,
-          contractAddress: GIVEAWAY_CONTRACT_ADDRESS,
-          calls: [
-            {
+      // Retry logic for transaction execution
+      let result;
+      let lastError;
+      const maxRetries = 3;
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`Transaction attempt ${attempt}/${maxRetries}`);
+          
+          if (attempt > 1) {
+            toast({
+              title: "Retrying...",
+              description: `Attempt ${attempt}/${maxRetries}`,
+            });
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          }
+          
+          result = await callAnyContractAsync({
+            params: {
+              encryptKey: walletPin,
+              wallet: wallet,
               contractAddress: GIVEAWAY_CONTRACT_ADDRESS,
-              entrypoint: "create_giveaway",
-              calldata: calldata,
+              calls: [
+                {
+                  contractAddress: GIVEAWAY_CONTRACT_ADDRESS,
+                  entrypoint: "create_giveaway",
+                  calldata: calldata,
+                },
+              ],
             },
-          ],
-        },
-        bearerToken: bearerToken,
-      });
+            bearerToken: bearerToken,
+          });
+          
+          // Success! Break out of retry loop
+          console.log("Transaction successful on attempt", attempt);
+          break;
+        } catch (txError: any) {
+          console.error(`Attempt ${attempt} failed:`, txError);
+          lastError = txError;
+          
+          // Check if it's a retryable error
+          const errorMsg = txError.message?.toLowerCase() || '';
+          const isRetryable = 
+            errorMsg.includes('execution') ||
+            errorMsg.includes('nonce') ||
+            errorMsg.includes('timeout') ||
+            errorMsg.includes('network');
+          
+          if (!isRetryable || attempt === maxRetries) {
+            // Not retryable or last attempt - throw error
+            throw txError;
+          }
+          
+          console.log("Error is retryable, will retry...");
+        }
+      }
 
       toast({
         title: "Success!",
@@ -334,9 +376,20 @@ export default function CreatePage() {
       setStep(3);
     } catch (error: any) {
       console.error("Error creating giveaway:", error);
+      
+      // Better error messages
+      let errorMessage = "Failed to create giveaway";
+      if (error.message?.includes("execution")) {
+        errorMessage = "Transaction execution failed. This might be due to network issues. Please try again.";
+      } else if (error.message?.includes("nonce")) {
+        errorMessage = "Wallet nonce issue. Please disconnect and reconnect your wallet.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to create giveaway",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -370,7 +423,17 @@ export default function CreatePage() {
   };
 
   const getTweetTemplate = () => {
-    return `🎁 Mystery Giveaway Alert!\n\nUse code [CODE] at starkgive.app/claim to win STRK!\n\nAmount is a surprise 👀\n\n#Starknet #Giveaway`;
+    return `🎉 ${formData.name} - Mystery Giveaway! 🎁
+
+I'm giving away ${formData.totalPrize} STRK to ${winners.length} lucky winner${winners.length > 1 ? 's' : ''}!
+
+💎 Prize amounts are HIDDEN until you claim!
+⏰ Expires in ${formData.expiryHours} hours
+🔗 Claim at: starkgive.app/claim
+
+Use code [CODE] to claim your surprise prize! 🤫
+
+#StarkGive #Starknet #Crypto #Giveaway`;
   };
 
   return (
@@ -693,7 +756,7 @@ export default function CreatePage() {
 
                 <div className="space-y-3">
                   <h4 className="font-semibold text-foreground">
-                    Tweet Template
+                    Share Template
                   </h4>
                   <div className="p-4 rounded-lg bg-muted/50 border border-border">
                     <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">
@@ -710,18 +773,15 @@ export default function CreatePage() {
                   </Button>
                 </div>
 
-                <Button asChild className="w-full" size="lg">
-                  <a
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                      getTweetTemplate()
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Twitter className="mr-2 h-4 w-4" />
-                    Share on Twitter
-                  </a>
-                </Button>
+                <SocialShare
+                  title={`${formData.name} - Mystery Giveaway on StarkGive!`}
+                  text={getTweetTemplate()}
+                  url="https://starkgive.app/claim"
+                  hashtags={["StarkGive", "Starknet", "Crypto", "Giveaway"]}
+                  variant="button"
+                  size="lg"
+                  className="w-full"
+                />
               </CardContent>
             </Card>
           )}

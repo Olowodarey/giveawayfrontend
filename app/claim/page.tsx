@@ -15,7 +15,6 @@ import {
   Gift,
   Sparkles,
   ExternalLink,
-  Twitter,
   AlertCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -23,9 +22,10 @@ import { Footer } from "@/components/footer";
 import Confetti from "react-confetti";
 import { useWindowSize } from "@/hooks/use-window-size";
 import { useCallAnyContract } from "@chipi-stack/nextjs";
-import { codeToFelt252, codeToFelt } from "@/lib/contract-utils";
+import { codeToFelt252, codeToFelt, u256ToStrk } from "@/lib/contract-utils";
 import { GIVEAWAY_CONTRACT_ADDRESS } from "@/lib/contract-config";
 import { useWallet, useWalletPin } from "@/contexts/wallet-context";
+import { SocialShare } from "@/components/social-share";
 import { useAuth } from "@clerk/nextjs";
 
 type ClaimState = "initial" | "valid" | "invalid" | "claimed";
@@ -126,8 +126,97 @@ export default function ClaimPage() {
         (result as any)?.transaction_hash || (result as any)?.txHash || "0x...";
       setTxHash(hash);
 
-      // For demo, show a random amount (in production, query from contract)
-      const amount = (Math.random() * 50 + 10).toFixed(2);
+      // Extract prize amount from transaction events
+      let amount = "0";
+      try {
+        // Log the entire result to see structure
+        console.log("=== FULL TRANSACTION RESULT ===");
+        console.log("Result keys:", Object.keys(result || {}));
+        console.log("Full result:", JSON.stringify(result, null, 2));
+        
+        // Look for PrizeClaimed event in the transaction
+        const events = (result as any)?.events || [];
+        console.log("=== EVENTS ===");
+        console.log("Number of events:", events.length);
+        console.log("Transaction events:", JSON.stringify(events, null, 2));
+        
+        // Find the PrizeClaimed event from the giveaway contract
+        const prizeClaimedEvent = events.find((event: any) => 
+          event.from_address === GIVEAWAY_CONTRACT_ADDRESS ||
+          (event.keys && event.keys.some((key: string) => 
+            key.toLowerCase().includes('prizeclaimed')
+          ))
+        );
+        
+        console.log("=== PRIZE CLAIMED EVENT ===");
+        console.log("PrizeClaimed event found:", !!prizeClaimedEvent);
+        console.log("PrizeClaimed event:", JSON.stringify(prizeClaimedEvent, null, 2));
+        
+        if (prizeClaimedEvent && prizeClaimedEvent.data && prizeClaimedEvent.data.length >= 2) {
+          // Event structure: [giveaway_id, code_hash, winner_address, amount_low, amount_high]
+          // Amount is the last 2 elements (u256 = low + high)
+          const data = prizeClaimedEvent.data;
+          
+          console.log("Full event data:", data);
+          console.log("Event data length:", data.length);
+          
+          // The amount should be the last 2 elements
+          const amountLow = data[data.length - 2];
+          const amountHigh = data[data.length - 1];
+          
+          console.log("Amount low (raw):", amountLow, "Type:", typeof amountLow);
+          console.log("Amount high (raw):", amountHigh, "Type:", typeof amountHigh);
+          
+          // Use utility function to convert u256 to STRK
+          amount = u256ToStrk(amountLow, amountHigh);
+          
+          console.log("Final extracted amount:", amount, "STRK");
+          
+          // Fallback if amount is still "0" but we have data
+          if (amount === "0" && (amountLow || amountHigh)) {
+            console.warn("Amount parsed as 0 but data exists, trying alternative parsing");
+            // Try parsing the entire data array
+            console.log("Trying alternative indices...");
+            for (let i = 0; i < data.length - 1; i++) {
+              const testAmount = u256ToStrk(data[i], data[i + 1]);
+              console.log(`Testing indices [${i}, ${i+1}]:`, testAmount);
+              if (testAmount !== "0" && parseFloat(testAmount) > 0) {
+                amount = testAmount;
+                console.log("Found non-zero amount at indices:", i, i+1);
+                break;
+              }
+            }
+          }
+        } else {
+          console.warn("PrizeClaimed event not found or invalid format");
+          console.log("Available events:", events.map((e: any) => ({
+            from: e.from_address,
+            keys: e.keys,
+            dataLength: e.data?.length
+          })));
+          
+          // Last resort: try all events
+          console.log("=== TRYING ALL EVENTS ===");
+          for (const event of events) {
+            if (event.data && event.data.length >= 2) {
+              console.log("Checking event from:", event.from_address);
+              for (let i = 0; i < event.data.length - 1; i++) {
+                const testAmount = u256ToStrk(event.data[i], event.data[i + 1]);
+                if (testAmount !== "0" && parseFloat(testAmount) > 0) {
+                  console.log(`Found amount in event: ${testAmount} at indices [${i}, ${i+1}]`);
+                  amount = testAmount;
+                  break;
+                }
+              }
+              if (amount !== "0") break;
+            }
+          }
+        }
+      } catch (parseError) {
+        console.error("Error parsing prize amount:", parseError);
+        amount = "0"; // Show 0 on error
+      }
+
       setPrizeAmount(amount);
 
       setClaimState("claimed");
@@ -207,13 +296,6 @@ export default function ClaimPage() {
     }
   };
 
-  const shareOnTwitter = () => {
-    const text = `I just won ${prizeAmount} STRK from a mystery giveaway on @StarkGive! 🎉\n\nCheck it out at starkgive.app`;
-    window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
-      "_blank"
-    );
-  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -406,10 +488,21 @@ export default function ClaimPage() {
                 </div>
 
                 <div className="space-y-3">
-                  <Button onClick={shareOnTwitter} className="w-full" size="lg">
-                    <Twitter className="mr-2 h-4 w-4" />
-                    Share on Twitter
-                  </Button>
+                  <SocialShare
+                    title={`I Won ${prizeAmount} STRK from ${giveawayName}!`}
+                    text={`🎊 I just won ${prizeAmount} STRK from the "${giveawayName}" mystery giveaway on StarkGive! 🎉
+
+The suspense was real! I had no idea how much I'd win until I claimed! 😱
+
+Try your luck at StarkGive - where every prize is a surprise! 🎁
+
+#StarkGive #Starknet #Winner #Crypto`}
+                    url="https://starkgive.app/claim"
+                    hashtags={["StarkGive", "Starknet", "Winner", "Crypto"]}
+                    variant="button"
+                    size="lg"
+                    className="w-full"
+                  />
                   <Button
                     onClick={() => {
                       setClaimState("initial");
@@ -434,7 +527,7 @@ export default function ClaimPage() {
               How to find claim codes
             </h3>
             <ul className="text-sm text-muted-foreground space-y-1 leading-relaxed">
-              <li>• Follow creators on Twitter who run giveaways</li>
+              <li>• Follow creators on social media who run giveaways</li>
               <li>• Look for posts containing claim codes</li>
               <li>• Enter the code here to claim your prize</li>
             </ul>

@@ -2,21 +2,80 @@
  * Convert STRK amount to u256 format (18 decimals)
  */
 export function strkToU256(amount: string): { low: string; high: string } {
-  const amountInWei = BigInt(Number.parseFloat(amount) * 10 ** 18);
-  const low = (
-    amountInWei & BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
-  ).toString();
-  const high = (amountInWei >> BigInt(128)).toString();
-  return { low, high };
+  // Convert STRK to wei (multiply by 10^18)
+  const amountInWei = BigInt(Math.floor(parseFloat(amount) * 1e18));
+
+  // Split into low and high parts (each 128 bits)
+  const low = amountInWei & ((BigInt(1) << BigInt(128)) - BigInt(1));
+  const high = amountInWei >> BigInt(128);
+
+  return {
+    low: low.toString(),
+    high: high.toString(),
+  };
 }
 
 /**
- * Convert u256 format back to STRK amount
+ * Convert u256 (low, high) back to STRK amount
  */
-export function u256ToStrk(low: string, high: string): string {
-  const amountInWei = (BigInt(high) << BigInt(128)) | BigInt(low);
-  const amount = Number(amountInWei) / 10 ** 18;
-  return amount.toFixed(6);
+export function u256ToStrk(low: string | bigint, high: string | bigint): string {
+  try {
+    // Handle hex strings (0x...) and decimal strings
+    let lowBigInt: bigint;
+    let highBigInt: bigint;
+    
+    if (typeof low === 'string') {
+      lowBigInt = low.startsWith('0x') ? BigInt(low) : BigInt(low);
+    } else {
+      lowBigInt = low;
+    }
+    
+    if (typeof high === 'string') {
+      highBigInt = high.startsWith('0x') ? BigInt(high) : BigInt(high);
+    } else {
+      highBigInt = high;
+    }
+    
+    console.log("u256ToStrk - Low:", lowBigInt.toString());
+    console.log("u256ToStrk - High:", highBigInt.toString());
+    
+    // Combine low and high parts
+    const totalWei = lowBigInt + (highBigInt << BigInt(128));
+    console.log("u256ToStrk - Total Wei:", totalWei.toString());
+    
+    // Convert from wei (10^18) to STRK using BigInt for precision
+    // Divide by 10^18 while maintaining precision
+    const divisor = BigInt(1000000000000000000); // 10^18
+    const wholePart = totalWei / divisor;
+    const remainder = totalWei % divisor;
+    
+    // Convert to decimal string
+    const wholeStr = wholePart.toString();
+    const remainderStr = remainder.toString().padStart(18, '0');
+    
+    // Combine and format
+    let result = wholeStr + '.' + remainderStr;
+    
+    // Remove trailing zeros but keep at least 2 decimal places for small amounts
+    result = result.replace(/(\.\d*?)0+$/, '$1');
+    if (result.endsWith('.')) {
+      result = result.slice(0, -1);
+    }
+    
+    // If the amount is very small, show more decimals
+    if (parseFloat(result) < 0.01 && parseFloat(result) > 0) {
+      // Keep up to 6 significant decimals for small amounts
+      const match = result.match(/^0\.0*[1-9]\d{0,5}/);
+      result = match ? match[0] : result;
+    }
+    
+    console.log("u256ToStrk - Result:", result, "STRK");
+    
+    return result || "0";
+  } catch (error) {
+    console.error("Error converting u256 to STRK:", error, "Low:", low, "High:", high);
+    return "0";
+  }
 }
 
 /**
@@ -113,7 +172,7 @@ export function feltToString(felt: any): string {
     }
     
     // If it's 0, return empty string
-    if (feltBigInt === 0n) return '';
+    if (feltBigInt === BigInt(0)) return '';
     
     // Convert BigInt to hex string
     let hexStr = feltBigInt.toString(16);

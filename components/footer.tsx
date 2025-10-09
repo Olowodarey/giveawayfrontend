@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Github, Twitter } from "lucide-react"
+import { Github, X, Send, MessageCircle } from "lucide-react"
 
 export function Footer() {
   return (
@@ -46,9 +46,27 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-accent transition-colors"
-                aria-label="Twitter"
+                aria-label="X (Twitter)"
               >
-                <Twitter className="h-5 w-5" />
+                <X className="h-5 w-5" />
+              </Link>
+              <Link
+                href="https://t.me"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-accent transition-colors"
+                aria-label="Telegram"
+              >
+                <Send className="h-5 w-5" />
+              </Link>
+              <Link
+                href="https://discord.gg"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-accent transition-colors"
+                aria-label="Discord"
+              >
+                <MessageCircle className="h-5 w-5" />
               </Link>
               <Link
                 href="https://github.com"

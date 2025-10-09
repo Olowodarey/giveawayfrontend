@@ -1,15 +1,16 @@
 # StarkGive - Mystery Giveaway Platform
 
-A Twitter giveaway platform built on Starknet where users can't see prize amounts until they claim - creating excitement and mystery! Powered by ChipiPay for gasless transactions.
+A social giveaway platform built on Starknet where users can't see prize amounts until they claim - creating excitement and mystery! Share on any platform and powered by ChipiPay for gasless transactions.
 
 ## 🎁 Features
 
 - **Mystery Prizes**: Prize amounts are hidden until claimed
 - **Gasless Transactions**: All transactions sponsored via ChipiPay (no gas fees!)
-- **Twitter Integration**: Easy sharing and distribution
+- **Universal Social Sharing**: Share on Twitter, Facebook, LinkedIn, WhatsApp, Telegram, Reddit, and more
 - **Equal or Random Distribution**: Choose how to split prizes
 - **Secure Code System**: Poseidon hash-based claim codes
 - **Expiry Management**: Set custom expiry times for giveaways
+- **Native Share API**: Mobile-optimized sharing with device's native menu
 
 ## 🏗️ Architecture
 

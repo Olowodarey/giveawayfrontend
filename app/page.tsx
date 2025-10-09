@@ -17,7 +17,7 @@ export default function HomePage() {
                 Run Mystery Giveaways Your Followers Will Love
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed text-pretty">
-                Create excitement with surprise prize amounts. Share codes on Twitter, let winners claim directly.
+                Create excitement with surprise prize amounts. Share codes on any platform, let winners claim directly.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg" className="text-base">
@@ -138,7 +138,7 @@ export default function HomePage() {
                   { step: "1", title: "Connect Wallet", desc: "Link your Starknet wallet to get started" },
                   { step: "2", title: "Deposit STRK", desc: "Fund your giveaway with the total prize pool" },
                   { step: "3", title: "Generate Codes", desc: "Create unique claim codes for your winners" },
-                  { step: "4", title: "Share on Twitter", desc: "Post codes and watch the excitement unfold" },
+                  { step: "4", title: "Share Anywhere", desc: "Post codes on any social platform and watch the excitement unfold" },
                 ].map((item) => (
                   <div key={item.step} className="flex gap-4">
                     <div className="flex-shrink-0 h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold">
