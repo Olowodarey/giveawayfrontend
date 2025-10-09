@@ -48,9 +48,9 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-accent",
+                  "text-sm font-medium transition-all hover:text-accent relative pb-1",
                   pathname === link.href
-                    ? "text-foreground"
+                    ? "text-accent font-bold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-accent after:rounded-full"
                     : "text-muted-foreground"
                 )}
               >
@@ -107,9 +107,9 @@ export function Header() {
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
-                    "text-sm font-medium transition-colors hover:text-accent px-2 py-1",
+                    "text-sm font-medium transition-all hover:text-accent px-2 py-2 rounded-md relative",
                     pathname === link.href
-                      ? "text-foreground"
+                      ? "text-accent font-bold bg-accent/10 border-l-2 border-accent"
                       : "text-muted-foreground"
                   )}
                 >
