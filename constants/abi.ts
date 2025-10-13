@@ -1,30 +1,30 @@
-export const GIVEAWAY_ABI = [
+export const GIVEAWAY_ABI =  [
   {
-    "type": "function",
     "name": "pause",
-    "inputs": [],
-    "outputs": [],
-    "state_mutability": "external"
-  },
-  {
     "type": "function",
-    "name": "unpause",
     "inputs": [],
     "outputs": [],
     "state_mutability": "external"
   },
   {
-    "type": "impl",
+    "name": "unpause",
+    "type": "function",
+    "inputs": [],
+    "outputs": [],
+    "state_mutability": "external"
+  },
+  {
     "name": "UpgradeableImpl",
+    "type": "impl",
     "interface_name": "openzeppelin_upgrades::interface::IUpgradeable"
   },
   {
-    "type": "interface",
     "name": "openzeppelin_upgrades::interface::IUpgradeable",
+    "type": "interface",
     "items": [
       {
-        "type": "function",
         "name": "upgrade",
+        "type": "function",
         "inputs": [
           {
             "name": "new_class_hash",
@@ -37,13 +37,13 @@ export const GIVEAWAY_ABI = [
     ]
   },
   {
-    "type": "impl",
     "name": "GiveawayImpl",
+    "type": "impl",
     "interface_name": "giveaway::interfaces::Igiveaway::Igiveaway"
   },
   {
-    "type": "enum",
     "name": "core::bool",
+    "type": "enum",
     "variants": [
       {
         "name": "False",
@@ -56,8 +56,8 @@ export const GIVEAWAY_ABI = [
     ]
   },
   {
-    "type": "struct",
     "name": "core::integer::u256",
+    "type": "struct",
     "members": [
       {
         "name": "low",
@@ -70,8 +70,8 @@ export const GIVEAWAY_ABI = [
     ]
   },
   {
-    "type": "struct",
     "name": "giveaway::structs::Structs::Giveaway",
+    "type": "struct",
     "members": [
       {
         "name": "name",
@@ -79,6 +79,10 @@ export const GIVEAWAY_ABI = [
       },
       {
         "name": "creator",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
+        "name": "token_address",
         "type": "core::starknet::contract_address::ContractAddress"
       },
       {
@@ -112,8 +116,8 @@ export const GIVEAWAY_ABI = [
     ]
   },
   {
-    "type": "struct",
     "name": "giveaway::structs::Structs::PublicGiveawayInfo",
+    "type": "struct",
     "members": [
       {
         "name": "name",
@@ -142,8 +146,8 @@ export const GIVEAWAY_ABI = [
     ]
   },
   {
-    "type": "struct",
     "name": "giveaway::structs::Structs::UserCreatedGiveaway",
+    "type": "struct",
     "members": [
       {
         "name": "giveaway_id",
@@ -154,6 +158,10 @@ export const GIVEAWAY_ABI = [
         "type": "core::felt252"
       },
       {
+        "name": "token_address",
+        "type": "core::starknet::contract_address::ContractAddress"
+      },
+      {
         "name": "total_amount",
         "type": "core::integer::u256"
       },
@@ -184,8 +192,8 @@ export const GIVEAWAY_ABI = [
     ]
   },
   {
-    "type": "struct",
     "name": "giveaway::structs::Structs::UserClaimedPrize",
+    "type": "struct",
     "members": [
       {
         "name": "giveaway_id",
@@ -206,12 +214,12 @@ export const GIVEAWAY_ABI = [
     ]
   },
   {
-    "type": "interface",
     "name": "giveaway::interfaces::Igiveaway::Igiveaway",
+    "type": "interface",
     "items": [
       {
-        "type": "function",
         "name": "add_admin",
+        "type": "function",
         "inputs": [
           {
             "name": "new_admin",
@@ -226,12 +234,16 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "external"
       },
       {
-        "type": "function",
         "name": "create_giveaway",
+        "type": "function",
         "inputs": [
           {
             "name": "name",
             "type": "core::felt252"
+          },
+          {
+            "name": "token_address",
+            "type": "core::starknet::contract_address::ContractAddress"
           },
           {
             "name": "total_amount",
@@ -258,8 +270,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "external"
       },
       {
-        "type": "function",
         "name": "get_giveaway_info",
+        "type": "function",
         "inputs": [
           {
             "name": "giveaway_id",
@@ -274,8 +286,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "get_public_giveaway_info",
+        "type": "function",
         "inputs": [
           {
             "name": "giveaway_id",
@@ -290,8 +302,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "get_giveaway_count",
+        "type": "function",
         "inputs": [],
         "outputs": [
           {
@@ -301,8 +313,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "get_giveaway_id_by_name",
+        "type": "function",
         "inputs": [
           {
             "name": "name",
@@ -317,8 +329,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "is_prize_claimed",
+        "type": "function",
         "inputs": [
           {
             "name": "giveaway_id",
@@ -337,8 +349,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "has_address_claimed",
+        "type": "function",
         "inputs": [
           {
             "name": "giveaway_id",
@@ -357,8 +369,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "claim_prize",
+        "type": "function",
         "inputs": [
           {
             "name": "name",
@@ -373,8 +385,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "external"
       },
       {
-        "type": "function",
         "name": "reclaim_funds",
+        "type": "function",
         "inputs": [
           {
             "name": "name",
@@ -385,8 +397,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "external"
       },
       {
-        "type": "function",
         "name": "get_user_created_giveaways",
+        "type": "function",
         "inputs": [
           {
             "name": "user",
@@ -409,8 +421,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "get_user_claimed_prizes",
+        "type": "function",
         "inputs": [
           {
             "name": "user",
@@ -433,8 +445,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "get_user_stats",
+        "type": "function",
         "inputs": [
           {
             "name": "user",
@@ -449,8 +461,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "get_user_active_giveaways",
+        "type": "function",
         "inputs": [
           {
             "name": "user",
@@ -473,8 +485,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "get_reclaimable_giveaways",
+        "type": "function",
         "inputs": [
           {
             "name": "user",
@@ -491,17 +503,17 @@ export const GIVEAWAY_ABI = [
     ]
   },
   {
-    "type": "impl",
     "name": "PausableImpl",
+    "type": "impl",
     "interface_name": "openzeppelin_security::interface::IPausable"
   },
   {
-    "type": "interface",
     "name": "openzeppelin_security::interface::IPausable",
+    "type": "interface",
     "items": [
       {
-        "type": "function",
         "name": "is_paused",
+        "type": "function",
         "inputs": [],
         "outputs": [
           {
@@ -513,17 +525,17 @@ export const GIVEAWAY_ABI = [
     ]
   },
   {
-    "type": "impl",
     "name": "AccessControlMixinImpl",
+    "type": "impl",
     "interface_name": "openzeppelin_access::accesscontrol::interface::AccessControlABI"
   },
   {
-    "type": "interface",
     "name": "openzeppelin_access::accesscontrol::interface::AccessControlABI",
+    "type": "interface",
     "items": [
       {
-        "type": "function",
         "name": "has_role",
+        "type": "function",
         "inputs": [
           {
             "name": "role",
@@ -542,8 +554,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "get_role_admin",
+        "type": "function",
         "inputs": [
           {
             "name": "role",
@@ -558,8 +570,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "grant_role",
+        "type": "function",
         "inputs": [
           {
             "name": "role",
@@ -574,8 +586,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "external"
       },
       {
-        "type": "function",
         "name": "revoke_role",
+        "type": "function",
         "inputs": [
           {
             "name": "role",
@@ -590,8 +602,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "external"
       },
       {
-        "type": "function",
         "name": "renounce_role",
+        "type": "function",
         "inputs": [
           {
             "name": "role",
@@ -606,8 +618,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "external"
       },
       {
-        "type": "function",
         "name": "hasRole",
+        "type": "function",
         "inputs": [
           {
             "name": "role",
@@ -626,8 +638,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "getRoleAdmin",
+        "type": "function",
         "inputs": [
           {
             "name": "role",
@@ -642,8 +654,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "view"
       },
       {
-        "type": "function",
         "name": "grantRole",
+        "type": "function",
         "inputs": [
           {
             "name": "role",
@@ -658,8 +670,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "external"
       },
       {
-        "type": "function",
         "name": "revokeRole",
+        "type": "function",
         "inputs": [
           {
             "name": "role",
@@ -674,8 +686,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "external"
       },
       {
-        "type": "function",
         "name": "renounceRole",
+        "type": "function",
         "inputs": [
           {
             "name": "role",
@@ -690,8 +702,8 @@ export const GIVEAWAY_ABI = [
         "state_mutability": "external"
       },
       {
-        "type": "function",
         "name": "supports_interface",
+        "type": "function",
         "inputs": [
           {
             "name": "interface_id",
@@ -708,298 +720,294 @@ export const GIVEAWAY_ABI = [
     ]
   },
   {
-    "type": "constructor",
     "name": "constructor",
+    "type": "constructor",
     "inputs": [
       {
         "name": "default_admin",
         "type": "core::starknet::contract_address::ContractAddress"
-      },
+      }
+    ]
+  },
+  {
+    "kind": "struct",
+    "name": "openzeppelin_security::pausable::PausableComponent::Paused",
+    "type": "event",
+    "members": [
       {
-        "name": "strk_token",
+        "kind": "data",
+        "name": "account",
         "type": "core::starknet::contract_address::ContractAddress"
       }
     ]
   },
   {
-    "type": "event",
-    "name": "openzeppelin_security::pausable::PausableComponent::Paused",
     "kind": "struct",
-    "members": [
-      {
-        "name": "account",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
-      }
-    ]
-  },
-  {
-    "type": "event",
     "name": "openzeppelin_security::pausable::PausableComponent::Unpaused",
-    "kind": "struct",
+    "type": "event",
     "members": [
       {
+        "kind": "data",
         "name": "account",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
+        "type": "core::starknet::contract_address::ContractAddress"
       }
     ]
   },
   {
-    "type": "event",
+    "kind": "enum",
     "name": "openzeppelin_security::pausable::PausableComponent::Event",
-    "kind": "enum",
+    "type": "event",
     "variants": [
       {
+        "kind": "nested",
         "name": "Paused",
-        "type": "openzeppelin_security::pausable::PausableComponent::Paused",
-        "kind": "nested"
+        "type": "openzeppelin_security::pausable::PausableComponent::Paused"
       },
       {
+        "kind": "nested",
         "name": "Unpaused",
-        "type": "openzeppelin_security::pausable::PausableComponent::Unpaused",
-        "kind": "nested"
+        "type": "openzeppelin_security::pausable::PausableComponent::Unpaused"
       }
     ]
   },
   {
-    "type": "event",
+    "kind": "struct",
     "name": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::RoleGranted",
-    "kind": "struct",
+    "type": "event",
     "members": [
       {
+        "kind": "data",
         "name": "role",
-        "type": "core::felt252",
-        "kind": "data"
+        "type": "core::felt252"
       },
       {
+        "kind": "data",
         "name": "account",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
+        "type": "core::starknet::contract_address::ContractAddress"
       },
       {
+        "kind": "data",
         "name": "sender",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
+        "type": "core::starknet::contract_address::ContractAddress"
       }
     ]
   },
   {
-    "type": "event",
+    "kind": "struct",
     "name": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::RoleRevoked",
-    "kind": "struct",
+    "type": "event",
     "members": [
       {
+        "kind": "data",
         "name": "role",
-        "type": "core::felt252",
-        "kind": "data"
+        "type": "core::felt252"
       },
       {
+        "kind": "data",
         "name": "account",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
+        "type": "core::starknet::contract_address::ContractAddress"
       },
       {
+        "kind": "data",
         "name": "sender",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
+        "type": "core::starknet::contract_address::ContractAddress"
       }
     ]
   },
   {
-    "type": "event",
-    "name": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::RoleAdminChanged",
     "kind": "struct",
+    "name": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::RoleAdminChanged",
+    "type": "event",
     "members": [
       {
+        "kind": "data",
         "name": "role",
-        "type": "core::felt252",
-        "kind": "data"
+        "type": "core::felt252"
       },
       {
+        "kind": "data",
         "name": "previous_admin_role",
-        "type": "core::felt252",
-        "kind": "data"
+        "type": "core::felt252"
       },
       {
+        "kind": "data",
         "name": "new_admin_role",
-        "type": "core::felt252",
-        "kind": "data"
+        "type": "core::felt252"
       }
     ]
   },
   {
-    "type": "event",
-    "name": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::Event",
     "kind": "enum",
+    "name": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::Event",
+    "type": "event",
     "variants": [
       {
+        "kind": "nested",
         "name": "RoleGranted",
-        "type": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::RoleGranted",
-        "kind": "nested"
+        "type": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::RoleGranted"
       },
       {
+        "kind": "nested",
         "name": "RoleRevoked",
-        "type": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::RoleRevoked",
-        "kind": "nested"
+        "type": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::RoleRevoked"
       },
       {
+        "kind": "nested",
         "name": "RoleAdminChanged",
-        "type": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::RoleAdminChanged",
-        "kind": "nested"
+        "type": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::RoleAdminChanged"
       }
     ]
   },
   {
-    "type": "event",
-    "name": "openzeppelin_introspection::src5::SRC5Component::Event",
     "kind": "enum",
+    "name": "openzeppelin_introspection::src5::SRC5Component::Event",
+    "type": "event",
     "variants": []
   },
   {
-    "type": "event",
+    "kind": "struct",
     "name": "openzeppelin_upgrades::upgradeable::UpgradeableComponent::Upgraded",
-    "kind": "struct",
+    "type": "event",
     "members": [
       {
+        "kind": "data",
         "name": "class_hash",
-        "type": "core::starknet::class_hash::ClassHash",
-        "kind": "data"
+        "type": "core::starknet::class_hash::ClassHash"
       }
     ]
   },
   {
-    "type": "event",
+    "kind": "enum",
     "name": "openzeppelin_upgrades::upgradeable::UpgradeableComponent::Event",
-    "kind": "enum",
+    "type": "event",
     "variants": [
       {
+        "kind": "nested",
         "name": "Upgraded",
-        "type": "openzeppelin_upgrades::upgradeable::UpgradeableComponent::Upgraded",
-        "kind": "nested"
+        "type": "openzeppelin_upgrades::upgradeable::UpgradeableComponent::Upgraded"
       }
     ]
   },
   {
-    "type": "event",
-    "name": "giveaway::events::Events::GiveawayCreated",
     "kind": "struct",
+    "name": "giveaway::events::Events::BulkPaymentCreated",
+    "type": "event",
     "members": [
       {
+        "kind": "data",
         "name": "giveaway_id",
-        "type": "core::integer::u32",
-        "kind": "data"
+        "type": "core::integer::u32"
       },
       {
+        "kind": "data",
         "name": "name",
-        "type": "core::felt252",
-        "kind": "data"
+        "type": "core::felt252"
       },
       {
+        "kind": "data",
         "name": "creator",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
+        "type": "core::starknet::contract_address::ContractAddress"
       },
       {
+        "kind": "data",
         "name": "total_amount",
-        "type": "core::integer::u256",
-        "kind": "data"
+        "type": "core::integer::u256"
       },
       {
-        "name": "num_winners",
-        "type": "core::integer::u32",
-        "kind": "data"
+        "kind": "data",
+        "name": "num_recipients",
+        "type": "core::integer::u32"
       }
     ]
   },
   {
-    "type": "event",
-    "name": "giveaway::events::Events::PrizeClaimed",
     "kind": "struct",
+    "name": "giveaway::events::Events::PaymentClaimed",
+    "type": "event",
     "members": [
       {
+        "kind": "data",
         "name": "giveaway_id",
-        "type": "core::integer::u32",
-        "kind": "data"
+        "type": "core::integer::u32"
       },
       {
+        "kind": "data",
         "name": "code_hash",
-        "type": "core::felt252",
-        "kind": "data"
+        "type": "core::felt252"
       },
       {
-        "name": "winner",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
+        "kind": "data",
+        "name": "recipient",
+        "type": "core::starknet::contract_address::ContractAddress"
       },
       {
+        "kind": "data",
         "name": "amount",
-        "type": "core::integer::u256",
-        "kind": "data"
+        "type": "core::integer::u256"
       }
     ]
   },
   {
-    "type": "event",
-    "name": "giveaway::events::Events::FundsReclaimed",
     "kind": "struct",
+    "name": "giveaway::events::Events::FundsReclaimed",
+    "type": "event",
     "members": [
       {
+        "kind": "data",
         "name": "giveaway_id",
-        "type": "core::integer::u32",
-        "kind": "data"
+        "type": "core::integer::u32"
       },
       {
+        "kind": "data",
         "name": "creator",
-        "type": "core::starknet::contract_address::ContractAddress",
-        "kind": "data"
+        "type": "core::starknet::contract_address::ContractAddress"
       },
       {
+        "kind": "data",
         "name": "amount",
-        "type": "core::integer::u256",
-        "kind": "data"
+        "type": "core::integer::u256"
       }
     ]
   },
   {
-    "type": "event",
-    "name": "giveaway::contracts::Giveaway::Giveaway::Event",
     "kind": "enum",
+    "name": "giveaway::contracts::Giveaway::Giveaway::Event",
+    "type": "event",
     "variants": [
       {
+        "kind": "flat",
         "name": "PausableEvent",
-        "type": "openzeppelin_security::pausable::PausableComponent::Event",
-        "kind": "flat"
+        "type": "openzeppelin_security::pausable::PausableComponent::Event"
       },
       {
+        "kind": "flat",
         "name": "AccessControlEvent",
-        "type": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::Event",
-        "kind": "flat"
+        "type": "openzeppelin_access::accesscontrol::accesscontrol::AccessControlComponent::Event"
       },
       {
+        "kind": "flat",
         "name": "SRC5Event",
-        "type": "openzeppelin_introspection::src5::SRC5Component::Event",
-        "kind": "flat"
+        "type": "openzeppelin_introspection::src5::SRC5Component::Event"
       },
       {
+        "kind": "flat",
         "name": "UpgradeableEvent",
-        "type": "openzeppelin_upgrades::upgradeable::UpgradeableComponent::Event",
-        "kind": "flat"
+        "type": "openzeppelin_upgrades::upgradeable::UpgradeableComponent::Event"
       },
       {
-        "name": "GiveawayCreated",
-        "type": "giveaway::events::Events::GiveawayCreated",
-        "kind": "nested"
+        "kind": "nested",
+        "name": "BulkPaymentCreated",
+        "type": "giveaway::events::Events::BulkPaymentCreated"
       },
       {
-        "name": "PrizeClaimed",
-        "type": "giveaway::events::Events::PrizeClaimed",
-        "kind": "nested"
+        "kind": "nested",
+        "name": "PaymentClaimed",
+        "type": "giveaway::events::Events::PaymentClaimed"
       },
       {
+        "kind": "nested",
         "name": "FundsReclaimed",
-        "type": "giveaway::events::Events::FundsReclaimed",
-        "kind": "nested"
+        "type": "giveaway::events::Events::FundsReclaimed"
       }
     ]
   }

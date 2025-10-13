@@ -31,6 +31,9 @@ import {
   STRK_TOKEN_ADDRESS,
   GIVEAWAY_ABI,
 } from "@/lib/contract-config";
+import { SUPPORTED_TOKENS, type TokenSymbol, parseTokenAmount, tokenAmountToU256 } from "@/lib/token-config";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useWallet, useWalletPin } from "@/contexts/wallet-context";
 import { useAuth } from "@clerk/nextjs";
 import { Contract, RpcProvider } from "starknet";
@@ -45,6 +48,7 @@ interface GiveawayData {
   name: string;
   totalPrize: string;
   expiryHours: string;
+  selectedToken: TokenSymbol;
 }
 
 export default function CreatePage() {
@@ -53,7 +57,11 @@ export default function CreatePage() {
     name: "",
     totalPrize: "",
     expiryHours: "24",
+    selectedToken: "STRK",
   });
+  const [neverExpire, setNeverExpire] = useState(false);
+  const [expiryValue, setExpiryValue] = useState("24");
+  const [expiryUnit, setExpiryUnit] = useState<"hours" | "days" | "weeks">("hours");
   const [winners, setWinners] = useState<Winner[]>([
     { id: "1", code: "", amount: "" },
   ]);
@@ -66,6 +74,43 @@ export default function CreatePage() {
   const { callAnyContractAsync, isLoading: isCallingContract } =
     useCallAnyContract();
   const { approveAsync, isLoading: isApproving } = useApprove();
+
+  // Convert time value to hours based on unit
+  const convertToHours = (value: string, unit: "hours" | "days" | "weeks"): number => {
+    const numValue = parseFloat(value) || 0;
+    switch (unit) {
+      case "hours":
+        return numValue;
+      case "days":
+        return numValue * 24;
+      case "weeks":
+        return numValue * 24 * 7;
+      default:
+        return numValue;
+    }
+  };
+
+  // Get human-readable expiry description
+  const getExpiryDescription = (value: string, unit: "hours" | "days" | "weeks"): string => {
+    const numValue = parseFloat(value) || 0;
+    if (numValue === 0) return "No expiry set";
+    
+    const hours = convertToHours(value, unit);
+    const days = Math.floor(hours / 24);
+    const remainingHours = hours % 24;
+    
+    if (unit === "hours") {
+      if (hours < 24) {
+        return `Expires in ${hours} hour${hours !== 1 ? 's' : ''}`;
+      } else {
+        return `Expires in ${days} day${days !== 1 ? 's' : ''} (${hours} hours)`;
+      }
+    } else if (unit === "days") {
+      return `Expires in ${numValue} day${numValue !== 1 ? 's' : ''} (${hours} hours)`;
+    } else {
+      return `Expires in ${numValue} week${numValue !== 1 ? 's' : ''} (${hours} hours)`;
+    }
+  };
 
   const handleInputChange = (field: keyof GiveawayData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -120,7 +165,7 @@ export default function CreatePage() {
     if (Math.abs(totalPrize - totalPrizes) > 0.01) {
       toast({
         title: "Amount Mismatch",
-        description: `Total prizes (${totalPrizes} STRK) must equal total prize pool (${totalPrize} STRK)`,
+        description: `Total prizes (${totalPrizes} ${formData.selectedToken}) must equal total prize pool (${totalPrize} ${formData.selectedToken})`,
         variant: "destructive",
       });
       return false;
@@ -171,19 +216,8 @@ export default function CreatePage() {
         description: "Contract addresses not configured. Please check environment variables.",
         variant: "destructive",
       });
-      console.error("Missing contract addresses:", {
-        giveaway: GIVEAWAY_CONTRACT_ADDRESS,
-        strk: STRK_TOKEN_ADDRESS,
-      });
       return;
     }
-
-    console.log("Wallet PIN:", walletPin ? "Present" : "Missing");
-    console.log("Wallet:", wallet);
-    console.log("Contract addresses:", {
-      giveaway: GIVEAWAY_CONTRACT_ADDRESS,
-      strk: STRK_TOKEN_ADDRESS,
-    });
 
     if (!walletPin) {
       toast({
@@ -215,7 +249,6 @@ export default function CreatePage() {
         }
       } catch (nameCheckError) {
         // If error is "Giveaway not found", that's good - name is available
-        console.log("Name check result:", nameCheckError);
       }
 
       const bearerToken = await getToken({ template: "giveawayapp" });
@@ -223,44 +256,39 @@ export default function CreatePage() {
         throw new Error("Failed to get authentication token");
       }
 
-      console.log("Bearer token obtained");
-
       // Hash codes using Poseidon via server-side API (same as contract does when claiming)
       const codes = winners.map((w) => w.code);
       const codeHashes = await hashClaimCodes(codes);
 
-      console.log("Codes:", codes);
-      console.log("Hashed codes:", codeHashes);
-
-      // Convert total amount to u256
-      const totalU256 = strkToU256(formData.totalPrize);
+      // Get selected token info
+      const selectedToken = SUPPORTED_TOKENS[formData.selectedToken];
+      const tokenAddress = selectedToken.address;
+      const tokenDecimals = selectedToken.decimals;
+      
+      // Convert total amount to token's smallest unit (with decimals)
+      const totalAmountWithDecimals = parseTokenAmount(formData.totalPrize, tokenDecimals);
+      const totalU256 = tokenAmountToU256(totalAmountWithDecimals);
       const totalAmount = formData.totalPrize;
 
-      console.log("Total amount (u256):", totalU256);
-      console.log("Expiry hours:", formData.expiryHours);
-
-      // Approve STRK tokens
+      // Approve tokens
       toast({
         title: "Approving Tokens",
-        description: "Approving STRK for giveaway contract...",
+        description: `Approving ${formData.selectedToken} for giveaway contract...`,
       });
 
       try {
-        console.log("Attempting to approve tokens with PIN...");
         await approveAsync({
           params: {
             encryptKey: walletPin,
             wallet: wallet,
-            contractAddress: STRK_TOKEN_ADDRESS,
+            contractAddress: tokenAddress,
             spender: GIVEAWAY_CONTRACT_ADDRESS,
             amount: totalAmount,
-            decimals: 18,
+            decimals: tokenDecimals,
           },
           bearerToken: bearerToken,
         });
-        console.log("Token approval successful");
       } catch (approvalError: any) {
-        console.error("Approval error:", approvalError);
         throw new Error(
           `Token approval failed: ${approvalError.message}. Please disconnect and reconnect your wallet.`
         );
@@ -269,18 +297,17 @@ export default function CreatePage() {
       // Create giveaway on contract
       toast({
         title: "Creating Giveaway",
-        description: "Depositing STRK and creating giveaway...",
+        description: `Depositing ${formData.selectedToken} and creating giveaway...`,
       });
 
       // Convert giveaway name to felt252
       const giveawayNameFelt = codeToFelt(formData.name);
-      console.log("Giveaway name:", formData.name);
-      console.log("Giveaway name as felt:", giveawayNameFelt);
 
       // Format prize amounts - flatten each u256 to [low, high]
       const prizeAmountsFlattened: string[] = [];
       winners.forEach((w) => {
-        const u256Amount = strkToU256(w.amount);
+        const amountWithDecimals = parseTokenAmount(w.amount, tokenDecimals);
+        const u256Amount = tokenAmountToU256(amountWithDecimals);
         prizeAmountsFlattened.push(u256Amount.low);
         prizeAmountsFlattened.push(u256Amount.high);
       });
@@ -288,6 +315,7 @@ export default function CreatePage() {
       // Build calldata manually with proper array formatting
       const calldata = [
         giveawayNameFelt,                    // name: felt252
+        tokenAddress,                        // token_address: ContractAddress
         totalU256.low,                       // total_amount.low: u128
         totalU256.high,                      // total_amount.high: u128
         codeHashes.length.toString(),        // code_hashes array length
@@ -297,19 +325,6 @@ export default function CreatePage() {
         formData.expiryHours,               // expiry_hours: u64
       ];
 
-      console.log("=== CALLDATA DEBUG ===");
-      console.log("Giveaway name (felt):", giveawayNameFelt);
-      console.log("Total amount (u256):", totalU256);
-      console.log("Code hashes count:", codeHashes.length);
-      console.log("Code hashes:", codeHashes);
-      console.log("Prize amounts count:", winners.length);
-      console.log("Prize amounts flattened:", prizeAmountsFlattened);
-      console.log("Expiry hours:", formData.expiryHours);
-      console.log("Full calldata:", calldata);
-      console.log("Calldata length:", calldata.length);
-      console.log("Contract address:", GIVEAWAY_CONTRACT_ADDRESS);
-      console.log("=== END DEBUG ===");
-
       // Retry logic for transaction execution
       let result;
       let lastError;
@@ -317,8 +332,6 @@ export default function CreatePage() {
       
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          console.log(`Transaction attempt ${attempt}/${maxRetries}`);
-          
           if (attempt > 1) {
             toast({
               title: "Retrying...",
@@ -345,10 +358,8 @@ export default function CreatePage() {
           });
           
           // Success! Break out of retry loop
-          console.log("Transaction successful on attempt", attempt);
           break;
         } catch (txError: any) {
-          console.error(`Attempt ${attempt} failed:`, txError);
           lastError = txError;
           
           // Check if it's a retryable error
@@ -363,8 +374,6 @@ export default function CreatePage() {
             // Not retryable or last attempt - throw error
             throw txError;
           }
-          
-          console.log("Error is retryable, will retry...");
         }
       }
 
@@ -375,8 +384,6 @@ export default function CreatePage() {
 
       setStep(3);
     } catch (error: any) {
-      console.error("Error creating giveaway:", error);
-      
       // Better error messages
       let errorMessage = "Failed to create giveaway";
       if (error.message?.includes("execution")) {
@@ -506,7 +513,33 @@ Use code [CODE] to claim your surprise prize! 🤫
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="totalPrize">Total Prize Pool (STRK)</Label>
+                  <Label htmlFor="token">Token</Label>
+                  <Select
+                    value={formData.selectedToken}
+                    onValueChange={(value) => handleInputChange("selectedToken", value as TokenSymbol)}
+                  >
+                    <SelectTrigger id="token">
+                      <SelectValue placeholder="Select token" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(SUPPORTED_TOKENS).map(([symbol, token]) => (
+                        <SelectItem key={symbol} value={symbol}>
+                          <div className="flex items-center gap-2">
+                            <span>{token.icon}</span>
+                            <span>{token.symbol}</span>
+                            <span className="text-xs text-muted-foreground">- {token.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Choose which token to use for this giveaway
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="totalPrize">Total Prize Pool ({formData.selectedToken})</Label>
                   <Input
                     id="totalPrize"
                     type="number"
@@ -520,20 +553,74 @@ Use code [CODE] to claim your surprise prize! 🤫
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label htmlFor="expiryHours">
-                    Expiry Time (hours from now)
+                    Expiry Time
                   </Label>
-                  <Input
-                    id="expiryHours"
-                    type="number"
-                    placeholder="24"
-                    value={formData.expiryHours}
-                    onChange={(e) =>
-                      handleInputChange("expiryHours", e.target.value)
-                    }
-                    min="1"
-                  />
+                  
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="neverExpire"
+                      checked={neverExpire}
+                      onCheckedChange={(checked) => {
+                        setNeverExpire(checked as boolean);
+                        if (checked) {
+                          handleInputChange("expiryHours", "0");
+                        } else {
+                          // Convert current value back to hours
+                          const hours = convertToHours(expiryValue, expiryUnit);
+                          handleInputChange("expiryHours", hours.toString());
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="neverExpire"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      Never Expire ♾️
+                    </label>
+                  </div>
+
+                  {!neverExpire && (
+                    <div className="flex gap-2">
+                      <Input
+                        id="expiryValue"
+                        type="number"
+                        placeholder="24"
+                        value={expiryValue}
+                        onChange={(e) => {
+                          setExpiryValue(e.target.value);
+                          const hours = convertToHours(e.target.value, expiryUnit);
+                          handleInputChange("expiryHours", hours.toString());
+                        }}
+                        min="1"
+                        className="flex-1"
+                      />
+                      <Select
+                        value={expiryUnit}
+                        onValueChange={(value: "hours" | "days" | "weeks") => {
+                          setExpiryUnit(value);
+                          const hours = convertToHours(expiryValue, value);
+                          handleInputChange("expiryHours", hours.toString());
+                        }}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hours">Hours</SelectItem>
+                          <SelectItem value="days">Days</SelectItem>
+                          <SelectItem value="weeks">Weeks</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-muted-foreground">
+                    {neverExpire 
+                      ? "This giveaway will never expire. You won't be able to reclaim funds."
+                      : `${getExpiryDescription(expiryValue, expiryUnit)}. After expiry, you can reclaim unclaimed funds.`}
+                  </p>
                 </div>
 
                 <div className="space-y-4">
@@ -561,7 +648,7 @@ Use code [CODE] to claim your surprise prize! 🤫
                           />
                           <Input
                             type="number"
-                            placeholder="Amount (STRK)"
+                            placeholder={`Amount (${formData.selectedToken})`}
                             value={winner.amount}
                             onChange={(e) =>
                               updateWinner(winner.id, "amount", e.target.value)
@@ -596,13 +683,13 @@ Use code [CODE] to claim your surprise prize! 🤫
                         Total Prizes:
                       </span>
                       <span className="font-medium">
-                        {calculateTotalPrizes().toFixed(2)} STRK
+                        {calculateTotalPrizes().toFixed(2)} {formData.selectedToken}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Prize Pool:</span>
                       <span className="font-medium">
-                        {formData.totalPrize || "0"} STRK
+                        {formData.totalPrize || "0"} {formData.selectedToken}
                       </span>
                     </div>
                     {formData.totalPrize &&
@@ -642,11 +729,17 @@ Use code [CODE] to claim your surprise prize! 🤫
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Token</span>
+                    <span className="font-semibold text-foreground">
+                      {SUPPORTED_TOKENS[formData.selectedToken].icon} {formData.selectedToken}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">
                       Total Prize Pool
                     </span>
                     <span className="font-semibold text-foreground">
-                      {formData.totalPrize} STRK
+                      {formData.totalPrize} {formData.selectedToken}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -660,7 +753,25 @@ Use code [CODE] to claim your surprise prize! 🤫
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Expires In</span>
                     <span className="font-semibold text-foreground">
-                      {formData.expiryHours} hours
+                      {formData.expiryHours === "0" 
+                        ? "Never ♾️" 
+                        : (() => {
+                            const hours = parseInt(formData.expiryHours);
+                            if (hours < 24) {
+                              return `${hours} hour${hours !== 1 ? 's' : ''}`;
+                            } else if (hours % (24 * 7) === 0) {
+                              const weeks = hours / (24 * 7);
+                              return `${weeks} week${weeks !== 1 ? 's' : ''} (${hours} hours)`;
+                            } else if (hours % 24 === 0) {
+                              const days = hours / 24;
+                              return `${days} day${days !== 1 ? 's' : ''} (${hours} hours)`;
+                            } else {
+                              const days = Math.floor(hours / 24);
+                              const remainingHours = hours % 24;
+                              return `${days}d ${remainingHours}h (${hours} hours)`;
+                            }
+                          })()
+                      }
                     </span>
                   </div>
                 </div>
@@ -679,7 +790,7 @@ Use code [CODE] to claim your surprise prize! 🤫
                           {winner.code}
                         </span>
                         <span className="font-medium text-foreground">
-                          {winner.amount} STRK
+                          {winner.amount} {formData.selectedToken}
                         </span>
                       </div>
                     ))}
@@ -706,7 +817,7 @@ Use code [CODE] to claim your surprise prize! 🤫
                         Creating...
                       </>
                     ) : (
-                      "Deposit STRK & Create Giveaway"
+                      `Deposit ${formData.selectedToken} & Create Giveaway`
                     )}
                   </Button>
                 </div>
