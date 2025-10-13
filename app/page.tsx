@@ -1,7 +1,19 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Gift, Zap, Shield, ArrowRight, Users, Wallet, Clock, UserCheck, Mail, CreditCard, Sparkles } from "lucide-react";
+import {
+  Gift,
+  Zap,
+  Shield,
+  ArrowRight,
+  Users,
+  Wallet,
+  Clock,
+  UserCheck,
+  Mail,
+  CreditCard,
+  Sparkles,
+} from "lucide-react";
 import { Footer } from "@/components/footer";
 
 export default function HomePage() {
@@ -17,8 +29,9 @@ export default function HomePage() {
                 Pay Anyone, Anywhere - Just Gmail Needed
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed text-pretty">
-                Workers receive crypto payments with just their Gmail. No wallet setup.
-                Convert to gift cards instantly. Zero crypto knowledge required.
+                Workers receive crypto payments with just their Gmail. No wallet
+                setup. Convert to gift cards instantly. Zero crypto knowledge
+                required.
               </p>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4 text-accent" />
@@ -94,8 +107,8 @@ export default function HomePage() {
               Why Choose StarkGive
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-              The simplest way to pay teams and reward communities with transparent,
-              gasless on-chain payments
+              The simplest way to pay teams and reward communities with
+              transparent, gasless on-chain payments
             </p>
           </div>
 
@@ -110,7 +123,8 @@ export default function HomePage() {
                   Just Gmail Needed
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Workers sign up with Gmail only. Wallet auto-created. No crypto knowledge or setup required.
+                  Workers sign up with Gmail only. Wallet auto-created. No
+                  crypto knowledge or setup required.
                 </p>
               </CardContent>
             </Card>
@@ -125,7 +139,8 @@ export default function HomePage() {
                   Zero Gas Fees
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Workers claim their salary with zero fees. 100% of payment goes directly to them.
+                  Workers claim their salary with zero fees. 100% of payment
+                  goes directly to them.
                 </p>
               </CardContent>
             </Card>
@@ -140,7 +155,8 @@ export default function HomePage() {
                   Convert to Gift Cards
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Don't want crypto? Convert your payment to Amazon, iTunes, or other gift cards instantly.
+                  Don't want crypto? Convert your payment to Amazon, iTunes, or
+                  other gift cards instantly.
                 </p>
               </CardContent>
             </Card>
@@ -155,10 +171,290 @@ export default function HomePage() {
                   Fully On-Chain
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Trustless and transparent. All payments secured by Starknet smart contracts.
+                  Trustless and transparent. All payments secured by Starknet
+                  smart contracts.
                 </p>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works: Bulk Payments Article */}
+      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/5 via-accent/5 to-transparent">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 text-balance">
+              Bulk Payments Without Wallet Addresses
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto text-pretty">
+              Send crypto to multiple people using just a <strong className="text-foreground">Payment Name + Claim Code</strong>. 
+              No wallet addresses needed. Recipients claim with Gmail only.
+            </p>
+          </div>
+
+          {/* How It Works Flow */}
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <Card className="border-primary/30 bg-card/50 backdrop-blur">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                    1
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Create Payment
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Choose token (STRK, USDC, ETH, etc.), set total amount and expiry. 
+                    Add recipients with custom codes and amounts.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-accent/30 bg-card/50 backdrop-blur">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-xl">
+                    2
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Share Name + Code
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Give recipients the Payment Name and their unique Claim Code 
+                    via email, social media, or messaging apps.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-success/30 bg-card/50 backdrop-blur">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center text-success font-bold text-xl">
+                    3
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Claim with Gmail
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Recipients sign in with Gmail, get auto-wallet via ChipiPay, 
+                    and claim instantly with zero gas fees.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Who Is It For */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-bold text-foreground mb-6 text-center">
+              Who Is It For?
+            </h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="border-border bg-card/50">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <Users className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">
+                        Creators & Communities
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Run giveaways on X, Discord, Telegram, Instagram
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border bg-card/50">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <Wallet className="h-5 w-5 text-accent flex-shrink-0 mt-1" />
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">
+                        Employers & DAOs
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Pay contractors, salaries, bounties without collecting wallets
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border bg-card/50">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <Gift className="h-5 w-5 text-success flex-shrink-0 mt-1" />
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">
+                        Event Organizers
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Distribute hackathon prizes, event rewards, referral bonuses
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border bg-card/50">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <UserCheck className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">
+                        Workers & Recipients
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Claim payments with just Gmail—no crypto knowledge needed
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Use Cases */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-bold text-foreground mb-6 text-center">
+              Ways You Can Use It
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                <CardContent className="pt-6">
+                  <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Gift className="h-5 w-5 text-primary" />
+                    Social Media Giveaways
+                  </h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span>Twitter/X contests with mystery prize amounts</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span>Discord community rewards and engagement incentives</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span>Telegram group airdrops and milestone celebrations</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span>Instagram follower appreciation giveaways</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card className="border-accent/20 bg-gradient-to-br from-accent/5 to-transparent">
+                <CardContent className="pt-6">
+                  <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Wallet className="h-5 w-5 text-accent" />
+                    Team & Contractor Payments
+                  </h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-accent mt-1">•</span>
+                      <span>Monthly salaries for remote teams (no wallet setup)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-accent mt-1">•</span>
+                      <span>Freelancer and contractor payouts in crypto</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-accent mt-1">•</span>
+                      <span>DAO contributor rewards and grants</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-accent mt-1">•</span>
+                      <span>Project-based payments with automatic distribution</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card className="border-success/20 bg-gradient-to-br from-success/5 to-transparent">
+                <CardContent className="pt-6">
+                  <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-success" />
+                    Bounties & Rewards
+                  </h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-success mt-1">•</span>
+                      <span>Hackathon prizes distributed instantly</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-success mt-1">•</span>
+                      <span>Bug bounty programs with code-based claims</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-success mt-1">•</span>
+                      <span>Content creator rewards and referral bonuses</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-success mt-1">•</span>
+                      <span>Community contribution incentives</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                <CardContent className="pt-6">
+                  <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    Events & Airdrops
+                  </h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span>Conference attendee rewards and swag</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span>Early supporter airdrops (no snapshot needed)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span>Micro-grants for community projects</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span>Educational course completion rewards</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button asChild size="lg" className="text-base min-w-[200px]">
+              <Link href="/create">
+                <Gift className="mr-2 h-5 w-5" />
+                Create Payment
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="text-base min-w-[200px]">
+              <Link href="/claim">
+                <Wallet className="mr-2 h-5 w-5" />
+                Claim Payment
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="ghost" className="text-base min-w-[200px]">
+              <Link href="/dashboard">
+                <Users className="mr-2 h-5 w-5" />
+                Dashboard
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -175,7 +471,8 @@ export default function HomePage() {
               Your Team Doesn't Need to Know Crypto
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-              Workers receive payments like any other app - just their Gmail and they're done
+              Workers receive payments like any other app - just their Gmail and
+              they're done
             </p>
           </div>
 
@@ -192,8 +489,8 @@ export default function HomePage() {
                       1. Sign Up with Gmail
                     </h3>
                     <p className="text-muted-foreground leading-relaxed">
-                      Workers click "Sign up with Google". That's it. No wallet downloads, 
-                      no seed phrases, no crypto exchanges needed.
+                      Workers click "Sign up with Google". That's it. No wallet
+                      downloads, no seed phrases, no crypto exchanges needed.
                     </p>
                   </div>
                   <div className="w-full p-3 rounded-lg bg-muted/50 text-sm font-mono">
@@ -215,8 +512,9 @@ export default function HomePage() {
                       2. Wallet Auto-Created
                     </h3>
                     <p className="text-muted-foreground leading-relaxed">
-                      Behind the scenes, ChipiPay creates a secure wallet linked to their email. 
-                      They never see it, never manage it. It just works.
+                      Behind the scenes, ChipiPay creates a secure wallet linked
+                      to their email. They never see it, never manage it. It
+                      just works.
                     </p>
                   </div>
                   <div className="w-full p-3 rounded-lg bg-muted/50 text-sm">
@@ -242,15 +540,21 @@ export default function HomePage() {
                       3. Convert to Gift Cards
                     </h3>
                     <p className="text-muted-foreground leading-relaxed">
-                      Don't want to deal with crypto? Convert STRK to Amazon, iTunes, 
-                      Google Play, or other gift cards. Use anywhere.
+                      Don't want to deal with crypto? Convert STRK to Amazon,
+                      iTunes, Google Play, or other gift cards. Use anywhere.
                     </p>
                   </div>
                   <div className="w-full p-3 rounded-lg bg-muted/50 text-sm">
                     <div className="flex items-center justify-center gap-2 flex-wrap">
-                      <span className="px-2 py-1 rounded bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold">Amazon</span>
-                      <span className="px-2 py-1 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold">iTunes</span>
-                      <span className="px-2 py-1 rounded bg-green-500/10 text-green-600 dark:text-green-400 font-semibold">Google</span>
+                      <span className="px-2 py-1 rounded bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold">
+                        Amazon
+                      </span>
+                      <span className="px-2 py-1 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold">
+                        iTunes
+                      </span>
+                      <span className="px-2 py-1 rounded bg-green-500/10 text-green-600 dark:text-green-400 font-semibold">
+                        Google
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -269,15 +573,22 @@ export default function HomePage() {
                   Real Example: Sarah's First Crypto Payment
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Sarah is a graphic designer who's never used crypto. Her client sends her a StarkGive claim code. 
-                  She clicks the link, signs in with her Gmail, enters the code, and claims 500 STRK. 
-                  She immediately converts it to a $100 Amazon gift card and buys art supplies. 
-                  <strong className="text-foreground"> Total time: 3 minutes. Crypto knowledge required: Zero.</strong>
+                  Sarah is a graphic designer who's never used crypto. Her
+                  client sends her a StarkGive claim code. She clicks the link,
+                  signs in with her Gmail, enters the code, and claims 500 STRK.
+                  She immediately converts it to a $100 Amazon gift card and
+                  buys art supplies.
+                  <strong className="text-foreground">
+                    {" "}
+                    Total time: 3 minutes. Crypto knowledge required: Zero.
+                  </strong>
                 </p>
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-success"></div>
-                    <span className="text-muted-foreground">No wallet setup</span>
+                    <span className="text-muted-foreground">
+                      No wallet setup
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-success"></div>
@@ -285,7 +596,9 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-success"></div>
-                    <span className="text-muted-foreground">No crypto learning</span>
+                    <span className="text-muted-foreground">
+                      No crypto learning
+                    </span>
                   </div>
                 </div>
               </div>
@@ -320,19 +633,27 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-4">
                   <p className="text-muted-foreground leading-relaxed">
-                    <strong className="text-foreground">The Problem:</strong> Collecting wallet addresses is tedious. 
-                    Workers without crypto wallets can't receive payment. Team members don't want to learn crypto just to get paid.
+                    <strong className="text-foreground">The Problem:</strong>{" "}
+                    Collecting wallet addresses is tedious. Workers without
+                    crypto wallets can't receive payment. Team members don't
+                    want to learn crypto just to get paid.
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
-                    <strong className="text-foreground">The Solution:</strong> Workers sign up with Gmail only - wallet auto-created. 
-                    Claim salary with zero fees. Convert to gift cards if they don't want crypto. 
-                    No crypto knowledge required at all.
+                    <strong className="text-foreground">The Solution:</strong>{" "}
+                    Workers sign up with Gmail only - wallet auto-created. Claim
+                    salary with zero fees. Convert to gift cards if they don't
+                    want crypto. No crypto knowledge required at all.
                   </p>
                   <div className="p-4 rounded-lg bg-accent/10 border border-accent/20">
-                    <p className="text-sm font-semibold text-foreground mb-2">Example Workflow:</p>
+                    <p className="text-sm font-semibold text-foreground mb-2">
+                      Example Workflow:
+                    </p>
                     <ul className="text-sm text-muted-foreground space-y-1">
                       <li>• Create payment: "March Salaries"</li>
-                      <li>• Add: Alice (500 STRK), Bob (750 STRK), Carol (600 STRK)</li>
+                      <li>
+                        • Add: Alice (500 STRK), Bob (750 STRK), Carol (600
+                        STRK)
+                      </li>
                       <li>• Generate codes and send via email</li>
                       <li>• Team signs up with Gmail (auto-wallet)</li>
                       <li>• Claims instantly, zero fees</li>
@@ -356,19 +677,27 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-4">
                   <p className="text-muted-foreground leading-relaxed">
-                    <strong className="text-foreground">The Problem:</strong> Traditional giveaways require complex setups. 
-                    Winners need to pay gas fees. Prize amounts are public, reducing excitement.
+                    <strong className="text-foreground">The Problem:</strong>{" "}
+                    Traditional giveaways require complex setups. Winners need
+                    to pay gas fees. Prize amounts are public, reducing
+                    excitement.
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
-                    <strong className="text-foreground">The Solution:</strong> Create mystery giveaways with hidden prize amounts. 
-                    Share codes on social media. Winners claim gasless and discover their surprise amount. 
-                    Perfect for building community engagement.
+                    <strong className="text-foreground">The Solution:</strong>{" "}
+                    Create mystery giveaways with hidden prize amounts. Share
+                    codes on social media. Winners claim gasless and discover
+                    their surprise amount. Perfect for building community
+                    engagement.
                   </p>
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                    <p className="text-sm font-semibold text-foreground mb-2">Example Workflow:</p>
+                    <p className="text-sm font-semibold text-foreground mb-2">
+                      Example Workflow:
+                    </p>
                     <ul className="text-sm text-muted-foreground space-y-1">
                       <li>• Create giveaway: "1000 Followers Celebration"</li>
-                      <li>• Set 10 winners with random amounts (10-100 STRK)</li>
+                      <li>
+                        • Set 10 winners with random amounts (10-100 STRK)
+                      </li>
                       <li>• Post codes on Twitter/Discord</li>
                       <li>• Winners claim and share their excitement</li>
                     </ul>
@@ -500,8 +829,8 @@ export default function HomePage() {
             Ready to Simplify Your Payments?
           </h2>
           <p className="text-lg mb-8 opacity-90 text-pretty">
-            Join project owners paying teams gasless and creators building engaged
-            communities with StarkGive
+            Join project owners paying teams gasless and creators building
+            engaged communities with StarkGive
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary" className="text-base">
@@ -510,7 +839,12 @@ export default function HomePage() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="text-base bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10 text-primary-foreground">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="text-base bg-transparent border-primary-foreground/20 hover:bg-primary-foreground/10 text-primary-foreground"
+            >
               <Link href="/create">
                 Create Giveaway
                 <Gift className="ml-2 h-5 w-5" />
