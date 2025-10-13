@@ -124,16 +124,8 @@ export default function ClaimPage() {
       // Extract prize amount from transaction events
       let amount = "0";
       try {
-        // Log the entire result to see structure
-        console.log("=== FULL TRANSACTION RESULT ===");
-        console.log("Result keys:", Object.keys(result || {}));
-        console.log("Full result:", JSON.stringify(result, null, 2));
-
         // Look for PrizeClaimed event in the transaction
         const events = (result as any)?.events || [];
-        console.log("=== EVENTS ===");
-        console.log("Number of events:", events.length);
-        console.log("Transaction events:", JSON.stringify(events, null, 2));
 
         // Find the PrizeClaimed event from the giveaway contract
         const prizeClaimedEvent = events.find(
@@ -145,13 +137,6 @@ export default function ClaimPage() {
               ))
         );
 
-        console.log("=== PRIZE CLAIMED EVENT ===");
-        console.log("PrizeClaimed event found:", !!prizeClaimedEvent);
-        console.log(
-          "PrizeClaimed event:",
-          JSON.stringify(prizeClaimedEvent, null, 2)
-        );
-
         if (
           prizeClaimedEvent &&
           prizeClaimedEvent.data &&
@@ -161,72 +146,31 @@ export default function ClaimPage() {
           // Amount is the last 2 elements (u256 = low + high)
           const data = prizeClaimedEvent.data;
 
-          console.log("Full event data:", data);
-          console.log("Event data length:", data.length);
-
           // The amount should be the last 2 elements
           const amountLow = data[data.length - 2];
           const amountHigh = data[data.length - 1];
 
-          console.log(
-            "Amount low (raw):",
-            amountLow,
-            "Type:",
-            typeof amountLow
-          );
-          console.log(
-            "Amount high (raw):",
-            amountHigh,
-            "Type:",
-            typeof amountHigh
-          );
-
           // Use utility function to convert u256 to STRK
           amount = u256ToStrk(amountLow, amountHigh);
 
-          console.log("Final extracted amount:", amount, "STRK");
-
           // Fallback if amount is still "0" but we have data
           if (amount === "0" && (amountLow || amountHigh)) {
-            console.warn(
-              "Amount parsed as 0 but data exists, trying alternative parsing"
-            );
             // Try parsing the entire data array
-            console.log("Trying alternative indices...");
             for (let i = 0; i < data.length - 1; i++) {
               const testAmount = u256ToStrk(data[i], data[i + 1]);
-              console.log(`Testing indices [${i}, ${i + 1}]:`, testAmount);
               if (testAmount !== "0" && parseFloat(testAmount) > 0) {
                 amount = testAmount;
-                console.log("Found non-zero amount at indices:", i, i + 1);
                 break;
               }
             }
           }
         } else {
-          console.warn("PrizeClaimed event not found or invalid format");
-          console.log(
-            "Available events:",
-            events.map((e: any) => ({
-              from: e.from_address,
-              keys: e.keys,
-              dataLength: e.data?.length,
-            }))
-          );
-
           // Last resort: try all events
-          console.log("=== TRYING ALL EVENTS ===");
           for (const event of events) {
             if (event.data && event.data.length >= 2) {
-              console.log("Checking event from:", event.from_address);
               for (let i = 0; i < event.data.length - 1; i++) {
                 const testAmount = u256ToStrk(event.data[i], event.data[i + 1]);
                 if (testAmount !== "0" && parseFloat(testAmount) > 0) {
-                  console.log(
-                    `Found amount in event: ${testAmount} at indices [${i}, ${
-                      i + 1
-                    }]`
-                  );
                   amount = testAmount;
                   break;
                 }
@@ -236,7 +180,6 @@ export default function ClaimPage() {
           }
         }
       } catch (parseError) {
-        console.error("Error parsing prize amount:", parseError);
         amount = "0"; // Show 0 on error
       }
 
@@ -251,8 +194,6 @@ export default function ClaimPage() {
         description: `You won ${amount} STRK!`,
       });
     } catch (error: any) {
-      console.error("Error claiming prize:", error);
-      console.log("Full error object:", JSON.stringify(error, null, 2));
 
       // Convert error to string for checking
       const errorString = JSON.stringify(error).toLowerCase();

@@ -52,17 +52,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     if (savedWallet && savedUserId === currentUserId) {
       try {
         setWallet(JSON.parse(savedWallet));
-        console.log("Loaded wallet for user:", currentUserId);
       } catch (e) {
-        console.error("Failed to parse saved wallet:", e);
         localStorage.removeItem("chipi_wallet");
         localStorage.removeItem("wallet_pin");
         localStorage.removeItem("wallet_user_id");
       }
     } else if (savedWallet && savedUserId !== currentUserId) {
       // Different user logged in, clear old wallet
-      console.log("Different user detected, clearing old wallet");
-      console.log("Old user:", savedUserId, "New user:", currentUserId);
       localStorage.removeItem("chipi_wallet");
       localStorage.removeItem("wallet_pin");
       localStorage.removeItem("wallet_user_id");
@@ -83,7 +79,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     ) {
       setAutoConnectAttempted(true);
       autoConnectWallet().catch((err: any) => {
-        console.error("Auto-connect failed:", err);
         // Don't show error to user for auto-connect failures
       });
     }
@@ -106,14 +101,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Failed to get authentication token");
       }
 
-      // Debug: Log token info
-      console.log("Token received:", token.substring(0, 50) + "...");
-      console.log("User email:", user.primaryEmailAddress?.emailAddress);
-      console.log("User ID:", user.id);
-
       // Use email as external user identifier (must match ChipiPay configuration)
       const userId = user.primaryEmailAddress?.emailAddress || user.id;
-      console.log("Using userId:", userId);
 
       // Try to get existing wallet first
       let walletData: WalletData | null = null;
@@ -125,8 +114,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (existingWallet) {
-          console.log("Existing wallet data:", existingWallet);
-
           walletData = {
             publicKey: (existingWallet as any)?.publicKey || "",
             encryptedPrivateKey:
@@ -137,19 +124,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
               (existingWallet as any)?.publicKey ||
               "",
           };
-          console.log("Processed wallet data:", walletData);
         }
       } catch (e) {
         // Wallet doesn't exist, create new one
-        console.log("No existing wallet, creating new one");
       }
 
       // If no existing wallet, create new one
       if (!walletData) {
-        console.log("Creating new wallet with:");
-        console.log("- externalUserId:", userId);
-        console.log("- bearerToken length:", token.length);
-
         const walletResponse = await createWalletAsync({
           params: {
             encryptKey: pin,
@@ -157,8 +138,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           },
           bearerToken: token,
         });
-
-        console.log("Wallet response:", walletResponse);
 
         walletData = {
           publicKey: (walletResponse as any)?.publicKey || "",
@@ -181,7 +160,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("wallet_pin", pin); // Store PIN (encrypted in production!)
       localStorage.setItem("wallet_user_id", userId); // Store user ID to verify on reload
     } catch (err: any) {
-      console.error("Wallet connection error:", err);
       setError(err.message || "Failed to connect wallet");
       throw err;
     } finally {
@@ -192,7 +170,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   // Automatic wallet connection (silent, no user interaction)
   const autoConnectWallet = async () => {
     if (!user) {
-      console.log("No user found for auto-connect");
       return;
     }
 
@@ -208,7 +185,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
       // Use email as external user identifier
       const userId = user.primaryEmailAddress?.emailAddress || user.id;
-      console.log("Auto-connecting wallet for user:", userId);
 
       // Try to get existing wallet first
       let walletData: WalletData | null = null;
@@ -220,8 +196,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (existingWallet) {
-          console.log("Found existing wallet");
-
           walletData = {
             publicKey: (existingWallet as any)?.publicKey || "",
             encryptedPrivateKey:
@@ -234,13 +208,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           };
         }
       } catch (e) {
-        console.log("No existing wallet found, will create new one");
+        // No existing wallet found, will create new one
       }
 
       // If no existing wallet, create new one automatically
       if (!walletData) {
-        console.log("Creating new wallet automatically...");
-
         // Generate a secure PIN automatically
         const autoPin = generateSecurePin(userId);
 
@@ -251,8 +223,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           },
           bearerToken: token,
         });
-
-        console.log("Wallet created successfully");
 
         walletData = {
           publicKey: (walletResponse as any)?.publicKey || "",
@@ -280,10 +250,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setWallet(walletData);
       localStorage.setItem("chipi_wallet", JSON.stringify(walletData));
       localStorage.setItem("wallet_user_id", userId); // Store user ID to verify on reload
-
-      console.log("Wallet auto-connected successfully!");
     } catch (err: any) {
-      console.error("Auto wallet connection error:", err);
       setError(err.message || "Failed to auto-connect wallet");
       // Don't throw error for auto-connect - fail silently
     } finally {

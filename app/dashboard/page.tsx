@@ -77,16 +77,12 @@ export default function DashboardPage() {
         return
       }
 
-      console.log('Fetching giveaways for user:', wallet.address)
-      
       // Use the new get_user_created_giveaways function
       const userGiveaways = await contract.get_user_created_giveaways(
         wallet.address,
         0, // offset
         100 // limit - fetch up to 100 giveaways
       )
-      
-      console.log('User giveaways from contract:', userGiveaways)
       
       // Parse the giveaways
       const parsedGiveaways: Giveaway[] = []
@@ -98,10 +94,8 @@ export default function DashboardPage() {
         }
       }
       
-      console.log('Parsed giveaways:', parsedGiveaways)
       setGiveaways(parsedGiveaways)
     } catch (error) {
-      console.error('Error fetching giveaways:', error)
       setGiveaways([])
       toast({
         title: "Error Loading Giveaways",
@@ -167,7 +161,6 @@ export default function DashboardPage() {
         creator: wallet?.address || '',
       }
     } catch (error) {
-      console.error('Error parsing giveaway:', error, giveaway)
       return null
     }
   }
@@ -178,7 +171,6 @@ export default function DashboardPage() {
       if (!wallet?.address) return
       
       const stats = await contract.get_user_stats(wallet.address)
-      console.log('User stats:', stats)
       
       const createdCount = Number(stats[0])
       const claimedCount = Number(stats[1])
@@ -190,7 +182,6 @@ export default function DashboardPage() {
         totalClaimedAmount
       })
     } catch (error) {
-      console.error('Error fetching user stats:', error)
     }
   }
 
@@ -205,8 +196,6 @@ export default function DashboardPage() {
         50 // limit
       )
       
-      console.log('Claimed prizes:', prizes)
-      
       const parsedPrizes: ClaimedPrize[] = []
       for (let i = 0; i < prizes.length; i++) {
         const prize = prizes[i]
@@ -220,7 +209,6 @@ export default function DashboardPage() {
       
       setClaimedPrizes(parsedPrizes)
     } catch (error) {
-      console.error('Error fetching claimed prizes:', error)
     }
   }
 
@@ -230,7 +218,6 @@ export default function DashboardPage() {
       if (!wallet?.address) return
       
       const reclaimable = await contract.get_reclaimable_giveaways(wallet.address)
-      console.log('Reclaimable giveaways:', reclaimable)
       
       const parsedGiveaways: Giveaway[] = []
       for (let i = 0; i < reclaimable.length; i++) {
@@ -243,7 +230,6 @@ export default function DashboardPage() {
       
       setReclaimableGiveaways(parsedGiveaways)
     } catch (error) {
-      console.error('Error fetching reclaimable giveaways:', error)
     }
   }
 
@@ -356,7 +342,6 @@ export default function DashboardPage() {
         fetchGiveaways()
       }, 3000)
     } catch (error: any) {
-      console.error("Error reclaiming funds:", error)
       toast({
         title: "Error",
         description: error.message || "Failed to reclaim funds. Please ensure the giveaway has expired and you are the creator.",

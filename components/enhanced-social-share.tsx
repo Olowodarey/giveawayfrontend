@@ -59,9 +59,6 @@ export function EnhancedSocialShare({
 
   // Validate content
   const validation = validateShareContent({ title, text, url, hashtags });
-  if (!validation.valid) {
-    console.warn("Invalid share content:", validation.errors);
-  }
 
   // Generate share URLs
   const shareUrls = generateShareUrls(

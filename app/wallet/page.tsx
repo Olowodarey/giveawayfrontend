@@ -105,7 +105,6 @@ export default function WalletPage() {
       }
       return "0";
     } catch (error) {
-      console.error(`Error fetching ${tokenSymbol} balance:`, error);
       return "0";
     }
   };
@@ -126,7 +125,6 @@ export default function WalletPage() {
       
       setBalances(newBalances);
     } catch (error) {
-      console.error("Error fetching balances:", error);
       toast({
         title: "Balance Fetch Failed",
         description: "Could not fetch wallet balances. Please try again.",
@@ -172,7 +170,6 @@ export default function WalletPage() {
       // Process received transactions
       if (receivedResponse.ok) {
         const receivedData = await receivedResponse.json();
-        console.log("Received transactions:", receivedData);
         
         if (receivedData.items && Array.isArray(receivedData.items)) {
           for (const tx of receivedData.items) {
@@ -214,7 +211,6 @@ export default function WalletPage() {
       // Process sent transactions
       if (sentResponse.ok) {
         const sentData = await sentResponse.json();
-        console.log("Sent transactions:", sentData);
         
         if (sentData.items && Array.isArray(sentData.items)) {
           for (const tx of sentData.items) {
@@ -256,10 +252,8 @@ export default function WalletPage() {
       // Sort by timestamp (newest first)
       parsedTransactions.sort((a, b) => b.timestamp - a.timestamp);
       
-      console.log("Total parsed transactions:", parsedTransactions.length);
       setTransactions(parsedTransactions);
     } catch (error) {
-      console.error("Error fetching transaction history:", error);
       // Don't show error toast, just log it
     } finally {
       setIsLoadingHistory(false);
@@ -307,13 +301,6 @@ export default function WalletPage() {
         throw new Error("Failed to get authentication token");
       }
 
-      console.log("Transfer params:", {
-        amount: sendAmount,
-        recipient: recipientAddress,
-        walletAddress: wallet.address,
-        pinLength: walletPin.length,
-      });
-
       // Get selected token info
       const token = SUPPORTED_TOKENS[selectedToken];
       
@@ -321,14 +308,6 @@ export default function WalletPage() {
       const amountInSmallestUnit = BigInt(
         Math.floor(parseFloat(sendAmount) * Math.pow(10, token.decimals))
       ).toString();
-      
-      console.log("Transfer details:", {
-        token: selectedToken,
-        amount: sendAmount,
-        decimals: token.decimals,
-        amountInSmallestUnit,
-        recipient: recipientAddress,
-      });
       
       const result = await callAnyContractAsync({
         params: {
@@ -348,8 +327,6 @@ export default function WalletPage() {
         bearerToken: bearerToken,
       });
 
-      console.log("Transfer result:", result);
-
       toast({
         title: "Success!",
         description: `Sent ${sendAmount} ${selectedToken} to ${recipientAddress.slice(
@@ -367,11 +344,6 @@ export default function WalletPage() {
         fetchTransactionHistory();
       }, 2000); // Wait 2 seconds for transaction to be processed
     } catch (error: any) {
-      console.error("=== TRANSFER ERROR ===");
-      console.error("Full error object:", error);
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
-      console.error("Error details:", JSON.stringify(error, null, 2));
 
       // Extract more detailed error message
       let errorMessage = error.message || "Failed to send tokens";

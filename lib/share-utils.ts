@@ -149,7 +149,6 @@ export async function shareNative(content: ShareContent): Promise<boolean> {
     if ((error as Error).name === "AbortError") {
       return false;
     }
-    console.error("Native share failed:", error);
     return false;
   }
 }
@@ -162,7 +161,6 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (error) {
-    console.error("Copy to clipboard failed:", error);
     return false;
   }
 }

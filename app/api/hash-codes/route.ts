@@ -26,15 +26,14 @@ export async function POST(request: NextRequest) {
         felt252Value = (felt252Value * BigInt(256)) + BigInt(code.charCodeAt(i))
       }
       const codeFelt = '0x' + felt252Value.toString(16)
-
       // Hash using Poseidon (same as contract)
       const hashed = hash.computePoseidonHashOnElements([codeFelt])
       return hashed
     })
 
     return NextResponse.json({ hashedCodes })
+
   } catch (error: any) {
-    console.error('Error hashing codes:', error)
     return NextResponse.json(
       { error: 'Failed to hash codes', details: error.message },
       { status: 500 }

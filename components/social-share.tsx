@@ -99,9 +99,7 @@ export function SocialShare({
           description: "Content shared via native share",
         });
       } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          console.error("Error sharing:", error);
-        }
+        // Silently handle share errors
       }
     } else {
       handleCopyLink();
@@ -118,7 +116,6 @@ export function SocialShare({
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error("Failed to copy:", error);
       toast({
         title: "Copy failed",
         description: "Could not copy link to clipboard",

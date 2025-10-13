@@ -36,12 +36,8 @@ export function u256ToStrk(low: string | bigint, high: string | bigint): string 
       highBigInt = high;
     }
     
-    console.log("u256ToStrk - Low:", lowBigInt.toString());
-    console.log("u256ToStrk - High:", highBigInt.toString());
-    
     // Combine low and high parts
     const totalWei = lowBigInt + (highBigInt << BigInt(128));
-    console.log("u256ToStrk - Total Wei:", totalWei.toString());
     
     // Convert from wei (10^18) to STRK using BigInt for precision
     // Divide by 10^18 while maintaining precision
@@ -69,11 +65,8 @@ export function u256ToStrk(low: string | bigint, high: string | bigint): string 
       result = match ? match[0] : result;
     }
     
-    console.log("u256ToStrk - Result:", result, "STRK");
-    
     return result || "0";
   } catch (error) {
-    console.error("Error converting u256 to STRK:", error, "Low:", low, "High:", high);
     return "0";
   }
 }
@@ -113,7 +106,6 @@ export async function hashClaimCodes(codes: string[]): Promise<string[]> {
     const { hashedCodes } = await response.json()
     return hashedCodes
   } catch (error) {
-    console.error('Failed to hash codes:', error)
     throw error
   }
 }
@@ -193,7 +185,6 @@ export function feltToString(felt: any): string {
     
     return result.trim() || feltBigInt.toString();
   } catch (error) {
-    console.error('Error converting felt to string:', error, felt);
     return String(felt);
   }
 }
