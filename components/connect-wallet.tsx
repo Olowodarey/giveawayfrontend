@@ -32,6 +32,21 @@ export function ConnectWallet() {
   const [showPinDialog, setShowPinDialog] = useState(false)
   const [pin, setPin] = useState("")
   const [isConnecting, setIsConnecting] = useState(false)
+  const [hasShownAutoConnectToast, setHasShownAutoConnectToast] = useState(false)
+
+  // Show toast when wallet auto-connects successfully
+  if (isConnected && isSignedIn && !hasShownAutoConnectToast) {
+    setHasShownAutoConnectToast(true)
+    // Only show if wallet was just created (not on page refresh)
+    const justCreated = !localStorage.getItem('wallet_toast_shown')
+    if (justCreated) {
+      localStorage.setItem('wallet_toast_shown', 'true')
+      toast({
+        title: "Wallet Ready! 🎉",
+        description: "Your gasless wallet has been set up automatically",
+      })
+    }
+  }
 
   const handleConnect = async () => {
     if (!pin || pin.length < 4) {
@@ -150,18 +165,21 @@ export function ConnectWallet() {
     )
   }
 
+  // Show loading state while wallet is being auto-created
   return (
     <>
-      <Button onClick={() => setShowPinDialog(true)} disabled={isLoading} className="gap-2">
+      <Button onClick={() => setShowPinDialog(true)} disabled={isLoading} className="gap-2" variant="outline">
         {isLoading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Connecting...</span>
+            <span className="hidden sm:inline">Setting up...</span>
+            <span className="sm:hidden">...</span>
           </>
         ) : (
           <>
             <Wallet className="h-4 w-4" />
-            <span>Connect Wallet</span>
+            <span className="hidden sm:inline">Manual Connect</span>
+            <span className="sm:hidden">Connect</span>
           </>
         )}
       </Button>

@@ -70,22 +70,21 @@ export default function ClaimPage() {
   };
 
   const handleClaim = async () => {
-    // Check if wallet is connected
+    // Check if wallet is connected (should be automatic after sign-in)
     if (!isConnected || !wallet) {
       toast({
-        title: "Wallet Not Connected",
-        description: "Please connect your wallet first",
-        variant: "destructive",
+        title: "Setting Up Your Wallet",
+        description: "Please wait while we set up your wallet automatically...",
       });
       return;
     }
 
     if (!walletPin) {
       toast({
-        title: "PIN Not Found",
-        description: "Please reconnect your wallet",
-        variant: "destructive",
+        title: "Wallet Setup In Progress",
+        description: "Your wallet is being set up. Please try again in a moment.",
       });
+      return;
     }
 
     setIsClaiming(true);
@@ -437,13 +436,13 @@ export default function ClaimPage() {
                     onClick={handleClaim}
                     className="w-full"
                     size="lg"
-                    disabled={isClaiming}
+                    disabled={isClaiming || !isConnected}
                   >
                     {isClaiming
                       ? "Claiming..."
-                      : isConnected
-                      ? "Claim Prize"
-                      : "Connect Wallet & Claim"}
+                      : !isConnected
+                      ? "Setting Up Wallet..."
+                      : "Claim Prize"}
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">
                     No gas fees required - completely free to claim

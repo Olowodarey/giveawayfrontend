@@ -13,7 +13,6 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
-import { ConnectWallet } from "@/components/connect-wallet";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -75,7 +74,6 @@ export function Header() {
 
             <SignedIn>
               <div className="hidden md:flex items-center gap-3">
-                <ConnectWallet />
                 <UserButton afterSignOutUrl="/" />
               </div>
             </SignedIn>
@@ -131,7 +129,6 @@ export function Header() {
                 </SignedOut>
 
                 <SignedIn>
-                  <ConnectWallet />
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-sm text-muted-foreground">
                       Account
