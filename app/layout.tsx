@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   description:
     "Run mystery giveaways your followers will love. Create excitement with surprise prize amounts on Starknet.",
   generator: "v0.app",
+  themeColor: "#0f172a",
 }
 
 export default function RootLayout({
@@ -30,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" className="dark">
         <body className={`font-sans ${inter.variable} antialiased`}>
           <ChipiProvider>
             <WalletProvider>

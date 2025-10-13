@@ -20,10 +20,8 @@ export function Header() {
 
   const navLinks = [
     { href: "/", label: "Home" },
- 
     { href: "/create", label: "Create" },
     { href: "/claim", label: "Claim" },
-    { href: "/wallet", label: "Wallet" },
     { href: "/dashboard", label: "Dashboard" },
   ];
 
@@ -74,6 +72,11 @@ export function Header() {
 
             <SignedIn>
               <div className="hidden md:flex items-center gap-3">
+                <Link href="/wallet">
+                  <Button variant="outline" size="sm">
+                    Wallet
+                  </Button>
+                </Link>
                 <UserButton afterSignOutUrl="/" />
               </div>
             </SignedIn>
