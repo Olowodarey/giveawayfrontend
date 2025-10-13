@@ -190,8 +190,8 @@ export default function ClaimPage() {
       setTimeout(() => setShowConfetti(false), 5000);
 
       toast({
-        title: "Prize Claimed!",
-        description: `You won ${amount} STRK!`,
+        title: "Payment Claimed!",
+        description: `You received ${amount} STRK!`,
       });
     } catch (error: any) {
 
@@ -229,10 +229,10 @@ export default function ClaimPage() {
           errorString.includes("prize_already_claimed");
 
         toast({
-          title: "Invalid Code or Giveaway",
+          title: "Invalid Code or Payment",
           description: isAlreadyClaimed
-            ? "This prize has already been claimed. Each code can only be used once per giveaway. Please try a different code."
-            : "This giveaway name or claim code doesn't exist, or has already been claimed. Please verify the details and try again.",
+            ? "This payment has already been claimed. Each code can only be used once. Please try a different code."
+            : "This payment name or claim code doesn't exist, or has already been claimed. Please verify the details and try again.",
           variant: "destructive",
         });
         return;
@@ -260,7 +260,7 @@ export default function ClaimPage() {
         title: "Claim Failed",
         description:
           error.message ||
-          "Failed to claim prize. Please check your giveaway name and code.",
+          "Failed to claim payment. Please check your payment name and code.",
         variant: "destructive",
       });
     } finally {
@@ -288,14 +288,14 @@ export default function ClaimPage() {
                 <div className="mx-auto h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center mb-4">
                   <Gift className="h-8 w-8 text-accent" />
                 </div>
-                <CardTitle className="text-2xl">Claim Your Prize</CardTitle>
+                <CardTitle className="text-2xl">Claim Your Payment</CardTitle>
                 <CardDescription>
-                  Enter your claim code to reveal your mystery prize
+                  Enter your claim code to receive your payment
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="giveawayName">Giveaway Name</Label>
+                  <Label htmlFor="giveawayName">Payment Name</Label>
                   <Input
                     id="giveawayName"
                     type="text"
@@ -333,17 +333,17 @@ export default function ClaimPage() {
                   <AlertCircle className="h-8 w-8 text-destructive" />
                 </div>
                 <CardTitle className="text-2xl">
-                  Invalid Code or Giveaway
+                  Invalid Code or Payment
                 </CardTitle>
                 <CardDescription>
-                  This giveaway or code doesn't exist, or the prize has already
+                  This payment or code doesn't exist, or has already
                   been claimed
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 space-y-2">
                   <p className="text-sm text-center text-foreground">
-                    <strong>Giveaway:</strong>{" "}
+                    <strong>Payment:</strong>{" "}
                     <span className="font-mono font-semibold">
                       {giveawayName}
                     </span>
@@ -356,12 +356,12 @@ export default function ClaimPage() {
                     Please verify:
                   </p>
                   <ul className="text-xs text-muted-foreground space-y-1">
-                    <li>• The giveaway name is spelled correctly</li>
+                    <li>• The payment name is spelled correctly</li>
                     <li>• The claim code hasn't been used already</li>
                     <li>
                       • <strong>Each code can only be claimed once</strong>
                     </li>
-                    <li>• The giveaway exists on-chain</li>
+                    <li>• The payment exists on-chain</li>
                   </ul>
                 </div>
                 <Button
@@ -387,16 +387,16 @@ export default function ClaimPage() {
                   <Sparkles className="h-8 w-8 text-accent" />
                 </div>
                 <CardTitle className="text-2xl">
-                  Mystery Prize Available!
+                  Payment Available!
                 </CardTitle>
                 <CardDescription>
-                  Connect your wallet to claim your surprise amount
+                  Connect your wallet to claim your payment
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="p-6 rounded-lg bg-gradient-to-br from-accent/10 to-primary/10 border border-accent/20 text-center">
                   <div className="text-sm text-muted-foreground mb-2">
-                    Prize Amount
+                    Payment Amount
                   </div>
                   <div className="text-5xl font-bold text-accent mb-2">???</div>
                   <div className="text-sm text-muted-foreground">STRK</div>
@@ -413,7 +413,7 @@ export default function ClaimPage() {
                       ? "Claiming..."
                       : !isConnected
                       ? "Setting Up Wallet..."
-                      : "Claim Prize"}
+                      : "Claim Payment"}
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">
                     No gas fees required - completely free to claim
@@ -432,13 +432,13 @@ export default function ClaimPage() {
                 </div>
                 <CardTitle className="text-2xl">Congratulations!</CardTitle>
                 <CardDescription>
-                  Your prize has been claimed successfully
+                  Your payment has been claimed successfully
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="p-6 rounded-lg bg-gradient-to-br from-success/10 to-accent/10 border border-success/20 text-center">
                   <div className="text-sm text-muted-foreground mb-2">
-                    You Won
+                    You Received
                   </div>
                   <div className="text-5xl font-bold text-success mb-2">
                     {prizeAmount}
@@ -493,7 +493,7 @@ Try your luck at StarkGive - where every prize is a surprise! 🎁
                     variant="outline"
                     className="w-full"
                   >
-                    Claim Another Prize
+                    Claim Another Payment
                   </Button>
                 </div>
               </CardContent>
@@ -506,9 +506,9 @@ Try your luck at StarkGive - where every prize is a surprise! 🎁
               How to find claim codes
             </h3>
             <ul className="text-sm text-muted-foreground space-y-1 leading-relaxed">
-              <li>• Follow creators on social media who run giveaways</li>
-              <li>• Look for posts containing claim codes</li>
-              <li>• Enter the code here to claim your prize</li>
+              <li>• Get claim codes from payment creators</li>
+              <li>• Look for posts or messages containing claim codes</li>
+              <li>• Enter the code here to claim your payment</li>
             </ul>
           </div>
         </div>

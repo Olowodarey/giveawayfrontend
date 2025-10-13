@@ -343,8 +343,8 @@ export default function CreatePage() {
 
       // Create giveaway on contract
       toast({
-        title: "Creating Giveaway",
-        description: `Depositing ${formData.selectedToken} and creating giveaway...`,
+        title: "Creating Payment",
+        description: `Processing ${formData.selectedToken} payment...`,
       });
 
       // Convert giveaway name to felt252
@@ -568,14 +568,14 @@ Use code [CODE] to claim your surprise prize! 🤫
           {step === 1 && (
             <Card>
               <CardHeader>
-                <CardTitle>Giveaway Details</CardTitle>
+                <CardTitle>Payment Details</CardTitle>
                 <CardDescription>
                   Set up your giveaway with custom codes and amounts
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Giveaway Name</Label>
+                  <Label htmlFor="name">Payment Name</Label>
                   <Input
                     id="name"
                     type="text"
@@ -718,7 +718,7 @@ Use code [CODE] to claim your surprise prize! 🤫
                     <Label>Winners & Codes</Label>
                     <Button onClick={addWinner} size="sm" variant="outline">
                       <Plus className="h-4 w-4 mr-1" />
-                      Add Winner
+                      Add Payment
                     </Button>
                   </div>
 
@@ -808,7 +808,7 @@ Use code [CODE] to claim your surprise prize! 🤫
               <CardHeader>
                 <CardTitle>Preview & Confirm</CardTitle>
                 <CardDescription>
-                  Review your giveaway details before depositing
+                  Review your payment details before creating
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -912,7 +912,7 @@ Use code [CODE] to claim your surprise prize! 🤫
                         Creating...
                       </>
                     ) : (
-                      `Deposit ${formData.selectedToken} & Create Giveaway`
+                      `Create Payment with ${formData.selectedToken}`
                     )}
                   </Button>
                 </div>
