@@ -191,10 +191,9 @@ export default function ClaimPage() {
 
       toast({
         title: "Payment Claimed!",
-        description: `You received ${amount} STRK!`,
+        description: "Your payment has been successfully received!",
       });
     } catch (error: any) {
-
       // Convert error to string for checking
       const errorString = JSON.stringify(error).toLowerCase();
       const errorMessage = (error.message || "").toLowerCase();
@@ -336,8 +335,8 @@ export default function ClaimPage() {
                   Invalid Code or Payment
                 </CardTitle>
                 <CardDescription>
-                  This payment or code doesn't exist, or has already
-                  been claimed
+                  This payment or code doesn't exist, or has already been
+                  claimed
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -386,9 +385,7 @@ export default function ClaimPage() {
                 <div className="mx-auto h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center mb-4 animate-pulse">
                   <Sparkles className="h-8 w-8 text-accent" />
                 </div>
-                <CardTitle className="text-2xl">
-                  Payment Available!
-                </CardTitle>
+                <CardTitle className="text-2xl">Payment Available!</CardTitle>
                 <CardDescription>
                   Connect your wallet to claim your payment
                 </CardDescription>
@@ -436,15 +433,19 @@ export default function ClaimPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="p-6 rounded-lg bg-gradient-to-br from-success/10 to-accent/10 border border-success/20 text-center">
-                  <div className="text-sm text-muted-foreground mb-2">
-                    You Received
-                  </div>
-                  <div className="text-5xl font-bold text-success mb-2">
-                    {prizeAmount}
-                  </div>
-                  <div className="text-lg font-semibold text-foreground">
-                    STRK
+                <div className="p-8 rounded-lg bg-gradient-to-br from-success/10 to-accent/10 border border-success/20 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-4">
+                    <div className="h-16 w-16 rounded-full bg-success/20 flex items-center justify-center">
+                      <Gift className="h-8 w-8 text-success" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-success mb-1">
+                        Payment Received!
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Your payment has been successfully claimed
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -468,16 +469,16 @@ export default function ClaimPage() {
 
                 <div className="space-y-3">
                   <SocialShare
-                    title={`I Won ${prizeAmount} STRK from ${giveawayName}!`}
-                    text={`🎊 I just won ${prizeAmount} STRK from the "${giveawayName}" mystery giveaway on StarkGive! 🎉
+                    title={`I received a payment from ${giveawayName}!`}
+                    text={`🎊 I just received a payment from "${giveawayName}" on StarkGive! 🎉
 
-The suspense was real! I had no idea how much I'd win until I claimed! 😱
+StarkGive makes crypto payments simple - just Gmail needed, no wallet setup required! 
 
-Try your luck at StarkGive - where every prize is a surprise! 🎁
+Try StarkGive for seamless crypto payments! 🎁
 
-#StarkGive #Starknet #Winner #Crypto`}
+#StarkGive #Starknet #CryptoPayments`}
                     url="https://starkgive.app/claim"
-                    hashtags={["StarkGive", "Starknet", "Winner", "Crypto"]}
+                    hashtags={["StarkGive", "Starknet", "CryptoPayments"]}
                     variant="button"
                     size="lg"
                     className="w-full"
