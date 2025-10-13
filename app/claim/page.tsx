@@ -11,12 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Gift,
-  Sparkles,
-  ExternalLink,
-  AlertCircle,
-} from "lucide-react";
+import { Gift, Sparkles, ExternalLink, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Footer } from "@/components/footer";
 import Confetti from "react-confetti";
@@ -82,7 +77,8 @@ export default function ClaimPage() {
     if (!walletPin) {
       toast({
         title: "Wallet Setup In Progress",
-        description: "Your wallet is being set up. Please try again in a moment.",
+        description:
+          "Your wallet is being set up. Please try again in a moment.",
       });
       return;
     }
@@ -132,68 +128,92 @@ export default function ClaimPage() {
         console.log("=== FULL TRANSACTION RESULT ===");
         console.log("Result keys:", Object.keys(result || {}));
         console.log("Full result:", JSON.stringify(result, null, 2));
-        
+
         // Look for PrizeClaimed event in the transaction
         const events = (result as any)?.events || [];
         console.log("=== EVENTS ===");
         console.log("Number of events:", events.length);
         console.log("Transaction events:", JSON.stringify(events, null, 2));
-        
+
         // Find the PrizeClaimed event from the giveaway contract
-        const prizeClaimedEvent = events.find((event: any) => 
-          event.from_address === GIVEAWAY_CONTRACT_ADDRESS ||
-          (event.keys && event.keys.some((key: string) => 
-            key.toLowerCase().includes('prizeclaimed')
-          ))
+        const prizeClaimedEvent = events.find(
+          (event: any) =>
+            event.from_address === GIVEAWAY_CONTRACT_ADDRESS ||
+            (event.keys &&
+              event.keys.some((key: string) =>
+                key.toLowerCase().includes("prizeclaimed")
+              ))
         );
-        
+
         console.log("=== PRIZE CLAIMED EVENT ===");
         console.log("PrizeClaimed event found:", !!prizeClaimedEvent);
-        console.log("PrizeClaimed event:", JSON.stringify(prizeClaimedEvent, null, 2));
-        
-        if (prizeClaimedEvent && prizeClaimedEvent.data && prizeClaimedEvent.data.length >= 2) {
+        console.log(
+          "PrizeClaimed event:",
+          JSON.stringify(prizeClaimedEvent, null, 2)
+        );
+
+        if (
+          prizeClaimedEvent &&
+          prizeClaimedEvent.data &&
+          prizeClaimedEvent.data.length >= 2
+        ) {
           // Event structure: [giveaway_id, code_hash, winner_address, amount_low, amount_high]
           // Amount is the last 2 elements (u256 = low + high)
           const data = prizeClaimedEvent.data;
-          
+
           console.log("Full event data:", data);
           console.log("Event data length:", data.length);
-          
+
           // The amount should be the last 2 elements
           const amountLow = data[data.length - 2];
           const amountHigh = data[data.length - 1];
-          
-          console.log("Amount low (raw):", amountLow, "Type:", typeof amountLow);
-          console.log("Amount high (raw):", amountHigh, "Type:", typeof amountHigh);
-          
+
+          console.log(
+            "Amount low (raw):",
+            amountLow,
+            "Type:",
+            typeof amountLow
+          );
+          console.log(
+            "Amount high (raw):",
+            amountHigh,
+            "Type:",
+            typeof amountHigh
+          );
+
           // Use utility function to convert u256 to STRK
           amount = u256ToStrk(amountLow, amountHigh);
-          
+
           console.log("Final extracted amount:", amount, "STRK");
-          
+
           // Fallback if amount is still "0" but we have data
           if (amount === "0" && (amountLow || amountHigh)) {
-            console.warn("Amount parsed as 0 but data exists, trying alternative parsing");
+            console.warn(
+              "Amount parsed as 0 but data exists, trying alternative parsing"
+            );
             // Try parsing the entire data array
             console.log("Trying alternative indices...");
             for (let i = 0; i < data.length - 1; i++) {
               const testAmount = u256ToStrk(data[i], data[i + 1]);
-              console.log(`Testing indices [${i}, ${i+1}]:`, testAmount);
+              console.log(`Testing indices [${i}, ${i + 1}]:`, testAmount);
               if (testAmount !== "0" && parseFloat(testAmount) > 0) {
                 amount = testAmount;
-                console.log("Found non-zero amount at indices:", i, i+1);
+                console.log("Found non-zero amount at indices:", i, i + 1);
                 break;
               }
             }
           }
         } else {
           console.warn("PrizeClaimed event not found or invalid format");
-          console.log("Available events:", events.map((e: any) => ({
-            from: e.from_address,
-            keys: e.keys,
-            dataLength: e.data?.length
-          })));
-          
+          console.log(
+            "Available events:",
+            events.map((e: any) => ({
+              from: e.from_address,
+              keys: e.keys,
+              dataLength: e.data?.length,
+            }))
+          );
+
           // Last resort: try all events
           console.log("=== TRYING ALL EVENTS ===");
           for (const event of events) {
@@ -202,7 +222,11 @@ export default function ClaimPage() {
               for (let i = 0; i < event.data.length - 1; i++) {
                 const testAmount = u256ToStrk(event.data[i], event.data[i + 1]);
                 if (testAmount !== "0" && parseFloat(testAmount) > 0) {
-                  console.log(`Found amount in event: ${testAmount} at indices [${i}, ${i+1}]`);
+                  console.log(
+                    `Found amount in event: ${testAmount} at indices [${i}, ${
+                      i + 1
+                    }]`
+                  );
                   amount = testAmount;
                   break;
                 }
@@ -256,13 +280,13 @@ export default function ClaimPage() {
 
       if (isInvalidCode) {
         setClaimState("invalid");
-        
+
         // Check if it's specifically an "already claimed" error
-        const isAlreadyClaimed = 
+        const isAlreadyClaimed =
           errorMessage.includes("prize_already_claimed") ||
           errorMessage.includes("already claimed") ||
           errorString.includes("prize_already_claimed");
-        
+
         toast({
           title: "Invalid Code or Giveaway",
           description: isAlreadyClaimed
@@ -302,7 +326,6 @@ export default function ClaimPage() {
       setIsClaiming(false);
     }
   };
-
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -368,16 +391,21 @@ export default function ClaimPage() {
                 <div className="mx-auto h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
                   <AlertCircle className="h-8 w-8 text-destructive" />
                 </div>
-                <CardTitle className="text-2xl">Invalid Code or Giveaway</CardTitle>
+                <CardTitle className="text-2xl">
+                  Invalid Code or Giveaway
+                </CardTitle>
                 <CardDescription>
-                  This giveaway or code doesn't exist, or the prize has already been claimed
+                  This giveaway or code doesn't exist, or the prize has already
+                  been claimed
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 space-y-2">
                   <p className="text-sm text-center text-foreground">
                     <strong>Giveaway:</strong>{" "}
-                    <span className="font-mono font-semibold">{giveawayName}</span>
+                    <span className="font-mono font-semibold">
+                      {giveawayName}
+                    </span>
                   </p>
                   <p className="text-sm text-center text-foreground">
                     <strong>Code:</strong>{" "}
@@ -389,7 +417,9 @@ export default function ClaimPage() {
                   <ul className="text-xs text-muted-foreground space-y-1">
                     <li>• The giveaway name is spelled correctly</li>
                     <li>• The claim code hasn't been used already</li>
-                    <li>• <strong>Each code can only be claimed once</strong></li>
+                    <li>
+                      • <strong>Each code can only be claimed once</strong>
+                    </li>
                     <li>• The giveaway exists on-chain</li>
                   </ul>
                 </div>

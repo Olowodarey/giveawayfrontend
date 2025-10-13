@@ -31,8 +31,19 @@ import {
   STRK_TOKEN_ADDRESS,
   GIVEAWAY_ABI,
 } from "@/lib/contract-config";
-import { SUPPORTED_TOKENS, type TokenSymbol, parseTokenAmount, tokenAmountToU256 } from "@/lib/token-config";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  SUPPORTED_TOKENS,
+  type TokenSymbol,
+  parseTokenAmount,
+  tokenAmountToU256,
+} from "@/lib/token-config";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useWallet, useWalletPin } from "@/contexts/wallet-context";
 import { useAuth } from "@clerk/nextjs";
@@ -61,7 +72,9 @@ export default function CreatePage() {
   });
   const [neverExpire, setNeverExpire] = useState(false);
   const [expiryValue, setExpiryValue] = useState("24");
-  const [expiryUnit, setExpiryUnit] = useState<"hours" | "days" | "weeks">("hours");
+  const [expiryUnit, setExpiryUnit] = useState<"hours" | "days" | "weeks">(
+    "hours"
+  );
   const [winners, setWinners] = useState<Winner[]>([
     { id: "1", code: "", amount: "" },
   ]);
@@ -76,7 +89,10 @@ export default function CreatePage() {
   const { approveAsync, isLoading: isApproving } = useApprove();
 
   // Convert time value to hours based on unit
-  const convertToHours = (value: string, unit: "hours" | "days" | "weeks"): number => {
+  const convertToHours = (
+    value: string,
+    unit: "hours" | "days" | "weeks"
+  ): number => {
     const numValue = parseFloat(value) || 0;
     switch (unit) {
       case "hours":
@@ -91,24 +107,33 @@ export default function CreatePage() {
   };
 
   // Get human-readable expiry description
-  const getExpiryDescription = (value: string, unit: "hours" | "days" | "weeks"): string => {
+  const getExpiryDescription = (
+    value: string,
+    unit: "hours" | "days" | "weeks"
+  ): string => {
     const numValue = parseFloat(value) || 0;
     if (numValue === 0) return "No expiry set";
-    
+
     const hours = convertToHours(value, unit);
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
-    
+
     if (unit === "hours") {
       if (hours < 24) {
-        return `Expires in ${hours} hour${hours !== 1 ? 's' : ''}`;
+        return `Expires in ${hours} hour${hours !== 1 ? "s" : ""}`;
       } else {
-        return `Expires in ${days} day${days !== 1 ? 's' : ''} (${hours} hours)`;
+        return `Expires in ${days} day${
+          days !== 1 ? "s" : ""
+        } (${hours} hours)`;
       }
     } else if (unit === "days") {
-      return `Expires in ${numValue} day${numValue !== 1 ? 's' : ''} (${hours} hours)`;
+      return `Expires in ${numValue} day${
+        numValue !== 1 ? "s" : ""
+      } (${hours} hours)`;
     } else {
-      return `Expires in ${numValue} week${numValue !== 1 ? 's' : ''} (${hours} hours)`;
+      return `Expires in ${numValue} week${
+        numValue !== 1 ? "s" : ""
+      } (${hours} hours)`;
     }
   };
 
@@ -213,7 +238,8 @@ export default function CreatePage() {
     if (!GIVEAWAY_CONTRACT_ADDRESS || !STRK_TOKEN_ADDRESS) {
       toast({
         title: "Configuration Error",
-        description: "Contract addresses not configured. Please check environment variables.",
+        description:
+          "Contract addresses not configured. Please check environment variables.",
         variant: "destructive",
       });
       return;
@@ -233,10 +259,16 @@ export default function CreatePage() {
     try {
       // Check if giveaway name already exists
       try {
-        const provider = new RpcProvider({ nodeUrl: 'https://starknet-mainnet.public.blastapi.io' });
-        const contract = new Contract(GIVEAWAY_ABI, GIVEAWAY_CONTRACT_ADDRESS, provider);
+        const provider = new RpcProvider({
+          nodeUrl: "https://starknet-mainnet.public.blastapi.io",
+        });
+        const contract = new Contract(
+          GIVEAWAY_ABI,
+          GIVEAWAY_CONTRACT_ADDRESS,
+          provider
+        );
         const nameFelt = codeToFelt(formData.name);
-        
+
         const existingId = await contract.get_giveaway_id_by_name(nameFelt);
         if (existingId && Number(existingId) > 0) {
           toast({
@@ -264,9 +296,12 @@ export default function CreatePage() {
       const selectedToken = SUPPORTED_TOKENS[formData.selectedToken];
       const tokenAddress = selectedToken.address;
       const tokenDecimals = selectedToken.decimals;
-      
+
       // Convert total amount to token's smallest unit (with decimals)
-      const totalAmountWithDecimals = parseTokenAmount(formData.totalPrize, tokenDecimals);
+      const totalAmountWithDecimals = parseTokenAmount(
+        formData.totalPrize,
+        tokenDecimals
+      );
       const totalU256 = tokenAmountToU256(totalAmountWithDecimals);
       const totalAmount = formData.totalPrize;
 
@@ -289,8 +324,20 @@ export default function CreatePage() {
           bearerToken: bearerToken,
         });
       } catch (approvalError: any) {
+        const errorMsg = (approvalError.message || "").toLowerCase();
+        
+        // Check for insufficient balance errors
+        if (errorMsg.includes("insufficient") || 
+            errorMsg.includes("balance") || 
+            errorMsg.includes("not enough") ||
+            errorMsg.includes("exceeds balance")) {
+          throw new Error(
+            `Insufficient ${formData.selectedToken} balance. You need ${formData.totalPrize} ${formData.selectedToken} but don't have enough in your wallet.`
+          );
+        }
+        
         throw new Error(
-          `Token approval failed: ${approvalError.message}. Please disconnect and reconnect your wallet.`
+          `Token approval failed: ${approvalError.message}. Please check your wallet balance.`
         );
       }
 
@@ -307,21 +354,21 @@ export default function CreatePage() {
       // For arrays: [length, ...elements]
       // For u256: [low, high]
       const calldata: string[] = [];
-      
+
       // 1. name: felt252
       calldata.push(giveawayNameFelt);
-      
+
       // 2. token_address: ContractAddress
       calldata.push(tokenAddress);
-      
+
       // 3. total_amount: u256
       calldata.push(totalU256.low);
       calldata.push(totalU256.high);
-      
+
       // 4. code_hashes: Array<felt252>
       calldata.push(codeHashes.length.toString());
       calldata.push(...codeHashes);
-      
+
       // 5. prize_amounts: Array<u256>
       calldata.push(winners.length.toString()); // Array length
       winners.forEach((w) => {
@@ -330,7 +377,7 @@ export default function CreatePage() {
         calldata.push(u256Amount.low);
         calldata.push(u256Amount.high);
       });
-      
+
       // 6. expiry_hours: u64
       calldata.push(formData.expiryHours);
 
@@ -338,7 +385,7 @@ export default function CreatePage() {
       let result;
       let lastError;
       const maxRetries = 3;
-      
+
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
           if (attempt > 1) {
@@ -347,9 +394,9 @@ export default function CreatePage() {
               description: `Attempt ${attempt}/${maxRetries}`,
             });
             // Wait before retry (exponential backoff)
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
           }
-          
+
           result = await callAnyContractAsync({
             params: {
               encryptKey: walletPin,
@@ -365,20 +412,20 @@ export default function CreatePage() {
             },
             bearerToken: bearerToken,
           });
-          
+
           // Success! Break out of retry loop
           break;
         } catch (txError: any) {
           lastError = txError;
-          
+
           // Check if it's a retryable error
-          const errorMsg = txError.message?.toLowerCase() || '';
-          const isRetryable = 
-            errorMsg.includes('execution') ||
-            errorMsg.includes('nonce') ||
-            errorMsg.includes('timeout') ||
-            errorMsg.includes('network');
-          
+          const errorMsg = txError.message?.toLowerCase() || "";
+          const isRetryable =
+            errorMsg.includes("execution") ||
+            errorMsg.includes("nonce") ||
+            errorMsg.includes("timeout") ||
+            errorMsg.includes("network");
+
           if (!isRetryable || attempt === maxRetries) {
             // Not retryable or last attempt - throw error
             throw txError;
@@ -393,18 +440,37 @@ export default function CreatePage() {
 
       setStep(3);
     } catch (error: any) {
-      // Better error messages
+      const errorMsg = (error.message || "").toLowerCase();
+      
+      // Better error messages with specific checks
       let errorMessage = "Failed to create giveaway";
-      if (error.message?.includes("execution")) {
-        errorMessage = "Transaction execution failed. This might be due to network issues. Please try again.";
-      } else if (error.message?.includes("nonce")) {
+      let errorTitle = "Error";
+      
+      // Check for insufficient balance
+      if (errorMsg.includes("insufficient") || 
+          errorMsg.includes("balance") || 
+          errorMsg.includes("not enough") ||
+          errorMsg.includes("exceeds balance")) {
+        errorTitle = "Insufficient Balance";
+        errorMessage = `You don't have enough ${formData.selectedToken} in your wallet. Please add funds and try again.`;
+      }
+      // Check for execution errors
+      else if (errorMsg.includes("execution")) {
+        errorTitle = "Transaction Failed";
+        errorMessage = "Transaction execution failed. This might be due to network issues or insufficient balance. Please check your wallet and try again.";
+      }
+      // Check for nonce errors
+      else if (errorMsg.includes("nonce")) {
+        errorTitle = "Wallet Issue";
         errorMessage = "Wallet nonce issue. Please disconnect and reconnect your wallet.";
-      } else if (error.message) {
+      }
+      // Use the actual error message if available
+      else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       toast({
-        title: "Error",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       });
@@ -441,7 +507,9 @@ export default function CreatePage() {
   const getTweetTemplate = () => {
     return `🎉 ${formData.name} - Mystery Giveaway! 🎁
 
-I'm giving away ${formData.totalPrize} STRK to ${winners.length} lucky winner${winners.length > 1 ? 's' : ''}!
+I'm giving away ${formData.totalPrize} STRK to ${winners.length} lucky winner${
+      winners.length > 1 ? "s" : ""
+    }!
 
 💎 Prize amounts are HIDDEN until you claim!
 ⏰ Expires in ${formData.expiryHours} hours
@@ -517,7 +585,8 @@ Use code [CODE] to claim your surprise prize! 🤫
                     maxLength={31}
                   />
                   <p className="text-xs text-muted-foreground">
-                    A unique identifier for your giveaway (max 31 characters). Each giveaway must have a different name.
+                    A unique identifier for your giveaway (max 31 characters).
+                    Each giveaway must have a different name.
                   </p>
                 </div>
 
@@ -525,21 +594,27 @@ Use code [CODE] to claim your surprise prize! 🤫
                   <Label htmlFor="token">Token</Label>
                   <Select
                     value={formData.selectedToken}
-                    onValueChange={(value) => handleInputChange("selectedToken", value as TokenSymbol)}
+                    onValueChange={(value) =>
+                      handleInputChange("selectedToken", value as TokenSymbol)
+                    }
                   >
                     <SelectTrigger id="token">
                       <SelectValue placeholder="Select token" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(SUPPORTED_TOKENS).map(([symbol, token]) => (
-                        <SelectItem key={symbol} value={symbol}>
-                          <div className="flex items-center gap-2">
-                            <span>{token.icon}</span>
-                            <span>{token.symbol}</span>
-                            <span className="text-xs text-muted-foreground">- {token.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
+                      {Object.entries(SUPPORTED_TOKENS).map(
+                        ([symbol, token]) => (
+                          <SelectItem key={symbol} value={symbol}>
+                            <div className="flex items-center gap-2">
+                              <span>{token.icon}</span>
+                              <span>{token.symbol}</span>
+                              <span className="text-xs text-muted-foreground">
+                                - {token.name}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        )
+                      )}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
@@ -548,7 +623,9 @@ Use code [CODE] to claim your surprise prize! 🤫
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="totalPrize">Total Prize Pool ({formData.selectedToken})</Label>
+                  <Label htmlFor="totalPrize">
+                    Total Prize Pool ({formData.selectedToken})
+                  </Label>
                   <Input
                     id="totalPrize"
                     type="number"
@@ -563,10 +640,8 @@ Use code [CODE] to claim your surprise prize! 🤫
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="expiryHours">
-                    Expiry Time
-                  </Label>
-                  
+                  <Label htmlFor="expiryHours">Expiry Time</Label>
+
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="neverExpire"
@@ -599,7 +674,10 @@ Use code [CODE] to claim your surprise prize! 🤫
                         value={expiryValue}
                         onChange={(e) => {
                           setExpiryValue(e.target.value);
-                          const hours = convertToHours(e.target.value, expiryUnit);
+                          const hours = convertToHours(
+                            e.target.value,
+                            expiryUnit
+                          );
                           handleInputChange("expiryHours", hours.toString());
                         }}
                         min="1"
@@ -624,11 +702,14 @@ Use code [CODE] to claim your surprise prize! 🤫
                       </Select>
                     </div>
                   )}
-                  
+
                   <p className="text-xs text-muted-foreground">
-                    {neverExpire 
+                    {neverExpire
                       ? "This giveaway will never expire. You won't be able to reclaim funds."
-                      : `${getExpiryDescription(expiryValue, expiryUnit)}. After expiry, you can reclaim unclaimed funds.`}
+                      : `${getExpiryDescription(
+                          expiryValue,
+                          expiryUnit
+                        )}. After expiry, you can reclaim unclaimed funds.`}
                   </p>
                 </div>
 
@@ -692,7 +773,8 @@ Use code [CODE] to claim your surprise prize! 🤫
                         Total Prizes:
                       </span>
                       <span className="font-medium">
-                        {calculateTotalPrizes().toFixed(2)} {formData.selectedToken}
+                        {calculateTotalPrizes().toFixed(2)}{" "}
+                        {formData.selectedToken}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
@@ -740,7 +822,8 @@ Use code [CODE] to claim your surprise prize! 🤫
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Token</span>
                     <span className="font-semibold text-foreground">
-                      {SUPPORTED_TOKENS[formData.selectedToken].icon} {formData.selectedToken}
+                      {SUPPORTED_TOKENS[formData.selectedToken].icon}{" "}
+                      {formData.selectedToken}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -762,25 +845,28 @@ Use code [CODE] to claim your surprise prize! 🤫
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Expires In</span>
                     <span className="font-semibold text-foreground">
-                      {formData.expiryHours === "0" 
-                        ? "Never ♾️" 
+                      {formData.expiryHours === "0"
+                        ? "Never ♾️"
                         : (() => {
                             const hours = parseInt(formData.expiryHours);
                             if (hours < 24) {
-                              return `${hours} hour${hours !== 1 ? 's' : ''}`;
+                              return `${hours} hour${hours !== 1 ? "s" : ""}`;
                             } else if (hours % (24 * 7) === 0) {
                               const weeks = hours / (24 * 7);
-                              return `${weeks} week${weeks !== 1 ? 's' : ''} (${hours} hours)`;
+                              return `${weeks} week${
+                                weeks !== 1 ? "s" : ""
+                              } (${hours} hours)`;
                             } else if (hours % 24 === 0) {
                               const days = hours / 24;
-                              return `${days} day${days !== 1 ? 's' : ''} (${hours} hours)`;
+                              return `${days} day${
+                                days !== 1 ? "s" : ""
+                              } (${hours} hours)`;
                             } else {
                               const days = Math.floor(hours / 24);
                               const remainingHours = hours % 24;
                               return `${days}d ${remainingHours}h (${hours} hours)`;
                             }
-                          })()
-                      }
+                          })()}
                     </span>
                   </div>
                 </div>
