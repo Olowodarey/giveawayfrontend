@@ -10,8 +10,7 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-foreground mb-3">About</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              StarkGive enables creators to run exciting mystery giveaways on Starknet with gasless claims and full
-              transparency.
+              Gigi Pay makes crypto payments simple. Pay anyone with just Gmail, no wallet setup required. Zero gas fees, instant claims.
             </p>
           </div>
 
@@ -82,7 +81,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">© 2025 StarkGive. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">© 2025 Gigi Pay. All rights reserved.</p>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Built on</span>
             <span className="font-semibold text-accent">Starknet</span>

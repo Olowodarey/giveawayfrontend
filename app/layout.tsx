@@ -17,9 +17,9 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "StarkGive - Mystery Giveaway Platform",
+  title: "Gigi Pay - Simple Crypto Payments",
   description:
-    "Run mystery giveaways your followers will love. Create excitement with surprise prize amounts on Starknet.",
+    "Pay anyone with just Gmail. No wallet setup, zero gas fees. Convert crypto to gift cards instantly. The simplest way to send and receive crypto payments.",
   generator: "v0.app",
   themeColor: "#0f172a",
 }

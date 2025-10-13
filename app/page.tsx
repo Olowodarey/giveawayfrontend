@@ -104,7 +104,7 @@ export default function HomePage() {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 text-balance">
-              Why Choose StarkGive
+              Why Choose Gigi Pay
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
               The simplest way to pay teams and reward communities with
@@ -267,7 +267,7 @@ export default function HomePage() {
                   </h4>
                 </div>
                 <p className="text-base text-center">
-                  If you're building a community on social media, StarkGive is perfect for you. Run exciting giveaways on Twitter/X, Discord, Telegram, or Instagram without the hassle of collecting wallet addresses. Your followers simply need their Gmail to claim prizes. Create mystery giveaways where prize amounts are hidden until claimed, building anticipation and engagement. Perfect for milestone celebrations, follower appreciation events, or regular community rewards.
+                  If you're building a community on social media, Gigi Pay is perfect for you. Run exciting giveaways on Twitter/X, Discord, Telegram, or Instagram without the hassle of collecting wallet addresses. Your followers simply need their Gmail to claim prizes. Create mystery giveaways where prize amounts are hidden until claimed, building anticipation and engagement. Perfect for milestone celebrations, follower appreciation events, or regular community rewards.
                 </p>
               </div>
 
@@ -487,7 +487,7 @@ export default function HomePage() {
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
                   Sarah is a graphic designer who's never used crypto. Her
-                  client sends her a StarkGive claim code. She clicks the link,
+                  client sends her a Gigi Pay claim code. She clicks the link,
                   signs in with her Gmail, enters the code, and claims 500 STRK.
                   She immediately converts it to a $100 Amazon gift card and
                   buys art supplies.
@@ -528,7 +528,7 @@ export default function HomePage() {
           </h2>
           <p className="text-lg mb-8 opacity-90 text-pretty text-muted-foreground">
             Join project owners paying teams gasless and creators building
-            engaged communities with StarkGive
+            engaged communities with Gigi Pay
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="text-base bg-accent hover:bg-accent/90">

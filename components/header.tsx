@@ -22,7 +22,7 @@ export function Header() {
     { href: "/", label: "Home" },
     { href: "/create", label: "Create" },
     { href: "/claim", label: "Claim" },
-    { href: "/dashboard", label: "Dashboard" },
+    { href: "/giftcards", label: "Gift Cards" },
   ];
 
   return (
@@ -35,7 +35,7 @@ export function Header() {
             className="flex items-center gap-2 text-xl font-semibold text-foreground hover:text-accent transition-colors"
           >
             <Gift className="h-6 w-6 text-accent" />
-            <span className="hidden sm:inline">StarkGive</span>
+            <span className="hidden sm:inline">Gigi Pay</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -75,6 +75,11 @@ export function Header() {
                 <Link href="/wallet">
                   <Button variant="outline" size="sm">
                     Wallet
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button variant="outline" size="sm">
+                    Dashboard
                   </Button>
                 </Link>
                 <UserButton afterSignOutUrl="/" />

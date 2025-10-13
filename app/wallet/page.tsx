@@ -518,7 +518,7 @@ export default function WalletPage() {
                       Wallet Information
                     </div>
                     <div className="text-muted-foreground">
-                      This is your Chipi wallet managed by StarkGive. You can
+                      This is your Chipi wallet managed by Gigi Pay. You can
                       send and receive STRK, USDC, USDT, ETH, and WBTC tokens using this wallet.
                     </div>
                   </div>

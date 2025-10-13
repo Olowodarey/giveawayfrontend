@@ -470,15 +470,15 @@ export default function ClaimPage() {
                 <div className="space-y-3">
                   <SocialShare
                     title={`I received a payment from ${giveawayName}!`}
-                    text={`🎊 I just received a payment from "${giveawayName}" on StarkGive! 🎉
+                    text={`🎊 I just received a payment from "${giveawayName}" on Gigi Pay! 🎉
 
-StarkGive makes crypto payments simple - just Gmail needed, no wallet setup required! 
+Gigi Pay makes crypto payments simple - just Gmail needed, no wallet setup required! 
 
-Try StarkGive for seamless crypto payments! 🎁
+Try Gigi Pay for seamless crypto payments! 🎁
 
-#StarkGive #Starknet #CryptoPayments`}
+#GigiPay #Starknet #CryptoPayments`}
                     url="https://starkgive.app/claim"
-                    hashtags={["StarkGive", "Starknet", "CryptoPayments"]}
+                    hashtags={["GigiPay", "Starknet", "CryptoPayments"]}
                     variant="button"
                     size="lg"
                     className="w-full"
