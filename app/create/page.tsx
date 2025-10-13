@@ -303,27 +303,36 @@ export default function CreatePage() {
       // Convert giveaway name to felt252
       const giveawayNameFelt = codeToFelt(formData.name);
 
-      // Format prize amounts - flatten each u256 to [low, high]
-      const prizeAmountsFlattened: string[] = [];
+      // Build calldata manually according to Starknet serialization
+      // For arrays: [length, ...elements]
+      // For u256: [low, high]
+      const calldata: string[] = [];
+      
+      // 1. name: felt252
+      calldata.push(giveawayNameFelt);
+      
+      // 2. token_address: ContractAddress
+      calldata.push(tokenAddress);
+      
+      // 3. total_amount: u256
+      calldata.push(totalU256.low);
+      calldata.push(totalU256.high);
+      
+      // 4. code_hashes: Array<felt252>
+      calldata.push(codeHashes.length.toString());
+      calldata.push(...codeHashes);
+      
+      // 5. prize_amounts: Array<u256>
+      calldata.push(winners.length.toString()); // Array length
       winners.forEach((w) => {
         const amountWithDecimals = parseTokenAmount(w.amount, tokenDecimals);
         const u256Amount = tokenAmountToU256(amountWithDecimals);
-        prizeAmountsFlattened.push(u256Amount.low);
-        prizeAmountsFlattened.push(u256Amount.high);
+        calldata.push(u256Amount.low);
+        calldata.push(u256Amount.high);
       });
-
-      // Build calldata manually with proper array formatting
-      const calldata = [
-        giveawayNameFelt,                    // name: felt252
-        tokenAddress,                        // token_address: ContractAddress
-        totalU256.low,                       // total_amount.low: u128
-        totalU256.high,                      // total_amount.high: u128
-        codeHashes.length.toString(),        // code_hashes array length
-        ...codeHashes,                       // code_hashes array elements
-        winners.length.toString(),           // prize_amounts array length (number of u256s)
-        ...prizeAmountsFlattened,           // prize_amounts flattened (low, high, low, high, ...)
-        formData.expiryHours,               // expiry_hours: u64
-      ];
+      
+      // 6. expiry_hours: u64
+      calldata.push(formData.expiryHours);
 
       // Retry logic for transaction execution
       let result;
