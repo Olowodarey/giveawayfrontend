@@ -1,30 +1,61 @@
-# StarkGive - Mystery Giveaway Platform
+# Gigi Pay - Seamless Crypto Payments Platform
 
-A social giveaway platform built on Starknet where users can't see prize amounts until they claim - creating excitement and mystery! Share on any platform and powered by ChipiPay for gasless transactions.
+**Gigi Pay** is a revolutionary crypto payment platform built on Starknet that makes sending and receiving cryptocurrency as simple as sending an email. No wallet setup, no gas fees, no complexity - just sign in with Gmail and start transacting.
 
-## 🎁 Features
+## 🌟 What Makes Gigi Pay Special
 
-- **Mystery Prizes**: Prize amounts are hidden until claimed
-- **Gasless Transactions**: All transactions sponsored via ChipiPay (no gas fees!)
-- **Universal Social Sharing**: Share on Twitter, Facebook, LinkedIn, WhatsApp, Telegram, Reddit, and more
-- **Equal or Random Distribution**: Choose how to split prizes
-- **Secure Code System**: Poseidon hash-based claim codes
-- **Expiry Management**: Set custom expiry times for giveaways
-- **Native Share API**: Mobile-optimized sharing with device's native menu
+Gigi Pay removes all barriers to crypto adoption by providing:
+
+- **Zero Wallet Setup**: Automatic wallet creation on sign-in with Gmail
+- **Gasless Transactions**: All transactions are free - powered by ChipiPay
+- **Multi-Token Support**: Send STRK, USDC, USDT, ETH, and WBTC
+- **Universal Sharing**: Share payment codes on any platform (Twitter, WhatsApp, Telegram, etc.)
+- **No Crypto Knowledge Required**: Perfect for non-Web3 users
+- **Instant Claims**: Recipients claim payments with just a code
+
+## 🎯 Core Features
+
+### For Senders
+- **Bulk Payments**: Send to multiple recipients at once
+- **Flexible Distribution**: Equal or random amount distribution
+- **Gift Cards**: Create reusable payment codes
+- **Salary Payments**: Perfect for remote teams and freelancers
+- **Expiry Control**: Set custom expiry times or never-expire payments
+- **Fund Recovery**: Reclaim unclaimed funds after expiry
+
+### For Recipients
+- **One-Click Claims**: Just enter the payment code
+- **Automatic Wallet**: Wallet created automatically on first claim
+- **No Gas Fees**: Completely free to claim
+- **Multi-Token**: Receive any supported token
+- **Social Sharing**: Share your wins on social media
+
+### Platform Features
+- **Dashboard**: Track all sent and received payments
+- **Wallet Management**: Built-in wallet with balance tracking
+- **Secure Authentication**: Powered by Clerk with Gmail integration
+- **Mobile Optimized**: Works seamlessly on all devices
 
 ## 🏗️ Architecture
 
-### Smart Contract
-
-- **Network**: Starknet Sepolia Testnet
+### Smart Contract (Cairo)
+- **Network**: Starknet Mainnet
 - **Contract Address**: `0x045fcf74e9e7cef23af8e9cd6fff04f6fb957360d8b180a0e4da9c56712fad19`
-- **Token**: STRK (Starknet Token)
+- **Language**: Cairo
+- **Features**:
+  - Multi-token support (STRK, USDC, USDT, ETH, WBTC)
+  - Poseidon hash-based claim codes
+  - Flexible expiry management
+  - Fund reclamation system
+  - User statistics tracking
 
-### Frontend
 
-- **Framework**: Next.js 14 with TypeScript
-- **Wallet**: ChipiPay SDK (Gasless Argent wallets)
-- **UI**: Tailwind CSS + shadcn/ui components
+
+### Key Technologies
+- **ChipiPay**: Gasless transaction sponsorship
+- **Clerk**: Secure authentication and user management
+- **Starknet**: Layer 2 scaling solution for Ethereum
+- **Cairo**: Smart contract programming language
 
 ## 🚀 Getting Started
 
@@ -32,15 +63,16 @@ A social giveaway platform built on Starknet where users can't see prize amounts
 
 - Node.js 18+ and npm
 - ChipiPay API Key ([Get one here](https://dashboard.chipipay.com/configure/api-keys))
-- STRK tokens on Sepolia testnet
+- Clerk Account ([Sign up here](https://clerk.com))
+- Tokens on Starknet Mainnet (STRK, USDC, USDT, ETH, or WBTC)
 
 ### Installation
 
 1. **Clone the repository**
 
 ```bash
-git clone <your-repo-url>
-cd crypto-giveaway-platform
+git clone https://github.com/yourusername/gigi-pay.git
+cd gigi-pay
 ```
 
 2. **Install dependencies**
@@ -55,13 +87,23 @@ Create a `.env.local` file in the root directory:
 
 ```env
 # ChipiPay Configuration
-NEXT_PUBLIC_CHIPI_API_KEY=pk_prod_your_api_key_here
+NEXT_PUBLIC_CHIPI_API_KEY=your_chipi_api_key_here
+
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+CLERK_SECRET_KEY=your_clerk_secret_key
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 
 # Starknet Contract Configuration
 NEXT_PUBLIC_GIVEAWAY_CONTRACT_ADDRESS=0x045fcf74e9e7cef23af8e9cd6fff04f6fb957360d8b180a0e4da9c56712fad19
 
-# STRK Token Address on Sepolia
+# Token Addresses on Starknet Mainnet
 NEXT_PUBLIC_STRK_TOKEN_ADDRESS=0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d
+NEXT_PUBLIC_USDC_TOKEN_ADDRESS=0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8
+NEXT_PUBLIC_USDT_TOKEN_ADDRESS=0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8
+NEXT_PUBLIC_ETH_TOKEN_ADDRESS=0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7
+NEXT_PUBLIC_WBTC_TOKEN_ADDRESS=0x03fe2b97c1fd336e750087d68b9b867997fd64a2661ff3ca5a7c771641e8e7ac
 ```
 
 4. **Run the development server**
@@ -70,185 +112,149 @@ NEXT_PUBLIC_STRK_TOKEN_ADDRESS=0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab0
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. **Open your browser**
+
+Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 📖 How It Works
 
-### For Giveaway Creators
+### For Payment Senders
 
-1. **Navigate to Create Page** (`/create`)
-2. **Enter Giveaway Details**:
+1. **Sign In with Gmail**
+   - Click "Sign In" and authenticate with your Gmail account
+   - Your Starknet wallet is automatically created in the background
+   - No manual wallet setup required!
 
-   - Total prize pool (STRK)
-   - Number of winners
-   - Distribution type (equal or random)
-   - Expiry time in hours
+2. **Create a Payment**
+   - Navigate to the Create page (`/create`)
+   - Choose your token (STRK, USDC, USDT, ETH, or WBTC)
+   - Enter total amount and number of recipients
+   - Select distribution type (equal or random amounts)
+   - Set expiry time (hours, days, or never expire)
 
-3. **Create Wallet & Deposit**:
+3. **Generate Payment Codes**
+   - System generates unique claim codes for each recipient
+   - Download CSV file with all codes and amounts
+   - Codes are secured with Poseidon hashing
 
-   - Enter a secure PIN to create your gasless wallet
-   - Approve STRK tokens (gasless)
-   - Deposit tokens to contract (gasless)
+4. **Share Payment Codes**
+   - Share codes via any platform (WhatsApp, Telegram, Twitter, Email, etc.)
+   - Recipients don't need any crypto knowledge
+   - All transactions are completely gasless
 
-4. **Get Claim Codes**:
-   - Unique codes are generated for each winner
-   - Download CSV with codes and amounts
-   - Share codes on Twitter using the template
+### For Payment Recipients
 
-### For Prize Claimers
+1. **Receive a Payment Code**
+   - Get a payment code from the sender (e.g., "STRK-ABC123XYZ")
+   - No prior crypto experience needed
 
-1. **Navigate to Claim Page** (`/claim`)
-2. **Enter Claim Code**: Input the code you received
-3. **Validate Code**: System checks if code is valid
-4. **Connect Wallet**:
-   - Enter a secure PIN to create your gasless wallet
-   - Claim your mystery prize (gasless!)
-5. **Celebrate**: See your prize amount and share on Twitter!
+2. **Claim Your Payment**
+   - Visit the Claim page (`/claim`)
+   - Sign in with Gmail (wallet auto-created)
+   - Enter the payment name and claim code
+   - Click "Claim Payment"
+
+3. **Receive Tokens**
+   - Tokens are instantly transferred to your wallet
+   - Zero gas fees - completely free
+   - Share your success on social media!
+
+### Using Your Wallet
+
+1. **View Balance**
+   - Navigate to Wallet page (`/wallet`)
+   - See balances for all supported tokens
+   - Copy your wallet address
+
+2. **Send Tokens**
+   - Enter recipient address and amount
+   - Select token to send
+   - Confirm transaction (gasless!)
+
+3. **Track Activity**
+   - View your dashboard (`/dashboard`)
+   - See all sent and received payments
+   - Track claimed vs unclaimed payments
+   - Reclaim expired unclaimed funds
 
 ## 🔐 Security Features
 
-- **Poseidon Hashing**: Claim codes are hashed using Starknet's Poseidon hash
-- **One Claim Per Address**: Each address can only claim once per giveaway
-- **Encrypted Wallets**: ChipiPay encrypts private keys with user PIN
+- **Poseidon Hashing**: Claim codes are hashed using Starknet's native Poseidon hash function
+- **One Claim Per Code**: Each code can only be claimed once
+- **Encrypted Wallets**: Private keys encrypted with deterministic user-specific PINs
 - **On-Chain Verification**: All validations happen on the smart contract
+- **Secure Authentication**: Clerk handles OAuth and session management
+- **No Private Key Exposure**: Users never see or handle private keys
+- **Automatic Wallet Isolation**: Each user gets a unique wallet tied to their account
 
-## 🎨 Tech Stack
+## 💡 Use Cases
 
-### Frontend
+### 1. Remote Team Salaries
+Pay your global team in crypto without worrying about:
+- Bank transfer fees
+- Currency conversion
+- Delayed payments
+- Complex wallet setups
 
-- **Next.js 14**: React framework with App Router
-- **TypeScript**: Type-safe development
-- **Tailwind CSS**: Utility-first styling
-- **shadcn/ui**: Beautiful component library
-- **ChipiPay SDK**: Gasless wallet management
+### 2. Freelancer Payments
+Perfect for paying freelancers:
+- Instant payments in stablecoins (USDC/USDT)
+- No intermediaries
+- Global reach
+- Transparent transaction history
 
-### Smart Contract
+### 3. Community Airdrops
+Distribute tokens to your community:
+- Bulk payment generation
+- Easy code distribution
+- Track claim rates
+- Reclaim unclaimed tokens
 
-- **Cairo**: Starknet smart contract language
-- **OpenZeppelin**: Security-audited contract components
-- **Starknet**: Layer 2 scaling solution
+### 4. Gift Cards & Vouchers
+Create crypto gift cards:
+- Never-expire option
+- Reusable codes
+- Multiple token options
+- Social media friendly
 
-### Key Libraries
-
-- `@chipi-stack/nextjs`: ChipiPay integration
-- `starknet`: Starknet utilities
-- `lucide-react`: Icon library
-- `react-confetti`: Celebration effects
+### 5. Giveaways & Contests
+Run social media contests:
+- Random or equal distribution
+- Mystery amounts for excitement
+- Universal social sharing
+- Automatic winner selection
 
 ## 📁 Project Structure
 
 ```
-crypto-giveaway-platform/
+gigi-pay/
 ├── app/
-│   ├── create/          # Giveaway creation page
-│   ├── claim/           # Prize claiming page
-│   ├── dashboard/       # Dashboard page
-│   ├── layout.tsx       # Root layout with ChipiProvider
-│   └── page.tsx         # Home page
+│   ├── create/              # Payment creation page
+│   ├── claim/               # Payment claiming page
+│   ├── dashboard/           # User dashboard
+│   ├── wallet/              # Wallet management
+│   ├── giftcards/           # Gift card feature
+│   ├── sign-in/             # Clerk sign-in
+│   ├── sign-up/             # Clerk sign-up
+│   ├── layout.tsx           # Root layout with providers
+│   └── page.tsx             # Landing page
 ├── components/
-│   ├── ui/              # shadcn/ui components
-│   ├── header.tsx       # Navigation header
-│   └── footer.tsx       # Page footer
+│   ├── ui/                  # shadcn/ui components
+│   ├── header.tsx           # Navigation header
+│   ├── footer.tsx           # Page footer
+│   ├── social-share.tsx     # Universal sharing component
+│   └── enhanced-social-share.tsx  # Advanced sharing
+├── contexts/
+│   └── wallet-context.tsx   # Wallet state management
 ├── lib/
 │   ├── contract-config.ts   # Contract addresses and ABIs
-│   ├── contract-utils.ts    # Utility functions
+│   ├── contract-utils.ts    # Blockchain utilities
+│   ├── token-config.ts      # Multi-token configuration
+│   ├── share-utils.ts       # Social sharing utilities
 │   └── utils.ts             # General utilities
-├── hooks/               # Custom React hooks
-└── public/              # Static assets
+├── constants/
+│   ├── abi.ts               # Contract ABI
+│   └── index.ts             # App constants
+├── hooks/                   # Custom React hooks
+└── public/                  # Static assets
 ```
-
-## 🔧 Contract Functions
-
-### `create_giveaway`
-
-Creates a new giveaway with hashed claim codes.
-
-**Parameters**:
-
-- `total_amount`: Total STRK to distribute
-- `code_hashes`: Array of hashed claim codes
-- `prize_amounts`: Array of prize amounts (u256)
-- `expiry_hours`: Hours until expiry
-
-### `claim_prize`
-
-Claims a prize using a claim code.
-
-**Parameters**:
-
-- `giveaway_id`: ID of the giveaway
-- `code`: Unhashed claim code (felt252)
-
-### `get_giveaway_info`
-
-Retrieves giveaway information.
-
-**Parameters**:
-
-- `giveaway_id`: ID of the giveaway
-
-## 🌐 Deployment
-
-### Deploy to Vercel
-
-1. Push your code to GitHub
-2. Import project in Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy!
-
-### Environment Variables for Production
-
-Make sure to set these in your deployment platform:
-
-- `NEXT_PUBLIC_CHIPI_API_KEY`
-- `NEXT_PUBLIC_GIVEAWAY_CONTRACT_ADDRESS`
-- `NEXT_PUBLIC_STRK_TOKEN_ADDRESS`
-
-## 🧪 Testing
-
-### Test on Sepolia
-
-1. Get Sepolia STRK tokens from faucet
-2. Create a test giveaway with small amounts
-3. Generate claim codes
-4. Test claiming with different addresses
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is open source and available under the MIT License.
-
-## 🔗 Links
-
-- [ChipiPay Documentation](https://docs.chipipay.com/)
-- [Starknet Documentation](https://docs.starknet.io/)
-- [Contract on Starkscan](https://sepolia.starkscan.co/contract/0x045fcf74e9e7cef23af8e9cd6fff04f6fb957360d8b180a0e4da9c56712fad19)
-
-## 💡 Future Enhancements
-
-- [ ] Multi-token support (ETH, USDC, etc.)
-- [ ] NFT giveaways
-- [ ] Scheduled giveaways
-- [ ] Analytics dashboard
-- [ ] Social authentication (Twitter, Discord)
-- [ ] Mainnet deployment
-
-## 🐛 Known Issues
-
-- Bearer token authentication is simplified for demo (use proper auth in production)
-- Prize amounts shown after claiming are simulated (should query from contract events)
-- Wallet persistence needs improvement (currently session-based)
-
-## 📞 Support
-
-For issues or questions:
-
-- Open an issue on GitHub
-- Contact ChipiPay support: [Telegram](https://t.me/+e2qjHEOwImkyZDVh)
-
----
-
-Built with ❤️ for the Starknet community
