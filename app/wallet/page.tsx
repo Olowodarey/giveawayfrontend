@@ -22,9 +22,7 @@ import {
   EyeOff,
   Loader2,
   AlertCircle,
-  History,
   ExternalLink,
-  RefreshCw,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Footer } from "@/components/footer";
@@ -35,17 +33,6 @@ import { STRK_TOKEN_ADDRESS } from "@/lib/contract-config";
 import { SUPPORTED_TOKENS, type TokenSymbol } from "@/lib/token-config";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface Transaction {
-  hash: string;
-  timestamp: number;
-  type: "send" | "receive";
-  amount: string;
-  token: string;
-  from: string;
-  to: string;
-  status: "success" | "pending" | "failed";
-}
-
 export default function WalletPage() {
   const [sendAmount, setSendAmount] = useState("");
   const [recipientAddress, setRecipientAddress] = useState("");
@@ -54,8 +41,6 @@ export default function WalletPage() {
   const [balances, setBalances] = useState<Record<string, string>>({});
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [selectedToken, setSelectedToken] = useState<TokenSymbol>("STRK");
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   const { toast } = useToast();
   const { wallet, isConnected } = useWallet();
@@ -135,135 +120,10 @@ export default function WalletPage() {
     }
   };
 
-  // Function to fetch transaction history
-  const fetchTransactionHistory = async () => {
-    if (!wallet?.address) return;
-
-    setIsLoadingHistory(true);
-    try {
-      // Fetch both incoming and outgoing transactions
-      const [receivedResponse, sentResponse] = await Promise.all([
-        // Transactions received
-        fetch(
-          `https://api.voyager.online/beta/txns?to=${wallet.address}&ps=10&p=1`,
-          {
-            headers: {
-              "accept": "application/json",
-              "x-api-key": "free-tier"
-            }
-          }
-        ),
-        // Transactions sent
-        fetch(
-          `https://api.voyager.online/beta/txns?from=${wallet.address}&ps=10&p=1`,
-          {
-            headers: {
-              "accept": "application/json",
-              "x-api-key": "free-tier"
-            }
-          }
-        )
-      ]);
-
-      const parsedTransactions: Transaction[] = [];
-      
-      // Process received transactions
-      if (receivedResponse.ok) {
-        const receivedData = await receivedResponse.json();
-        
-        if (receivedData.items && Array.isArray(receivedData.items)) {
-          for (const tx of receivedData.items) {
-            // Try to extract token and amount from transfer events
-            let amount = "0";
-            let token = "STRK";
-            
-            if (tx.transfers && tx.transfers.length > 0) {
-              const transfer = tx.transfers[0];
-              amount = transfer.value || "0";
-              
-              // Match token address to symbol
-              const tokenAddress = transfer.token_address?.toLowerCase();
-              for (const [symbol, tokenInfo] of Object.entries(SUPPORTED_TOKENS)) {
-                if (tokenInfo.address.toLowerCase() === tokenAddress) {
-                  token = symbol;
-                  // Convert amount from smallest unit
-                  const amountNum = Number(amount) / Math.pow(10, tokenInfo.decimals);
-                  amount = amountNum.toFixed(tokenInfo.decimals === 18 ? 4 : tokenInfo.decimals === 6 ? 5 : 8);
-                  break;
-                }
-              }
-            }
-            
-            parsedTransactions.push({
-              hash: tx.hash || "",
-              timestamp: tx.timestamp || Date.now() / 1000,
-              type: "receive",
-              amount,
-              token,
-              from: tx.from || "",
-              to: tx.to || "",
-              status: tx.status === "ACCEPTED_ON_L2" || tx.status === "ACCEPTED_ON_L1" ? "success" : "pending",
-            });
-          }
-        }
-      }
-      
-      // Process sent transactions
-      if (sentResponse.ok) {
-        const sentData = await sentResponse.json();
-        
-        if (sentData.items && Array.isArray(sentData.items)) {
-          for (const tx of sentData.items) {
-            // Try to extract token and amount from transfer events
-            let amount = "0";
-            let token = "STRK";
-            
-            if (tx.transfers && tx.transfers.length > 0) {
-              const transfer = tx.transfers[0];
-              amount = transfer.value || "0";
-              
-              // Match token address to symbol
-              const tokenAddress = transfer.token_address?.toLowerCase();
-              for (const [symbol, tokenInfo] of Object.entries(SUPPORTED_TOKENS)) {
-                if (tokenInfo.address.toLowerCase() === tokenAddress) {
-                  token = symbol;
-                  // Convert amount from smallest unit
-                  const amountNum = Number(amount) / Math.pow(10, tokenInfo.decimals);
-                  amount = amountNum.toFixed(tokenInfo.decimals === 18 ? 4 : tokenInfo.decimals === 6 ? 5 : 8);
-                  break;
-                }
-              }
-            }
-            
-            parsedTransactions.push({
-              hash: tx.hash || "",
-              timestamp: tx.timestamp || Date.now() / 1000,
-              type: "send",
-              amount,
-              token,
-              from: tx.from || "",
-              to: tx.to || "",
-              status: tx.status === "ACCEPTED_ON_L2" || tx.status === "ACCEPTED_ON_L1" ? "success" : "pending",
-            });
-          }
-        }
-      }
-      
-      // Sort by timestamp (newest first)
-      parsedTransactions.sort((a, b) => b.timestamp - a.timestamp);
-      
-      setTransactions(parsedTransactions);
-    } catch (error) {
-      // Don't show error toast, just log it
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  };
 
   // Fetch balances when wallet is connected
   useEffect(() => {
     fetchAllBalances();
-    fetchTransactionHistory();
   }, [wallet?.address]);
 
   const copyToClipboard = (text: string, label: string) => {
@@ -338,10 +198,9 @@ export default function WalletPage() {
       setSendAmount("");
       setRecipientAddress("");
 
-      // Refresh balance and history after successful transfer
+      // Refresh balance after successful transfer
       setTimeout(() => {
         fetchAllBalances();
-        fetchTransactionHistory();
       }, 2000); // Wait 2 seconds for transaction to be processed
     } catch (error: any) {
 
@@ -527,9 +386,9 @@ export default function WalletPage() {
             </CardContent>
           </Card>
 
-          {/* Tabs for Send/Receive/History */}
+          {/* Tabs for Send/Receive */}
           <Tabs defaultValue="send" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="send">
                 <ArrowUpRight className="h-4 w-4 mr-2" />
                 Send
@@ -537,10 +396,6 @@ export default function WalletPage() {
               <TabsTrigger value="receive">
                 <ArrowDownLeft className="h-4 w-4 mr-2" />
                 Receive
-              </TabsTrigger>
-              <TabsTrigger value="history">
-                <History className="h-4 w-4 mr-2" />
-                History
               </TabsTrigger>
             </TabsList>
 
@@ -671,131 +526,6 @@ export default function WalletPage() {
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* History Tab */}
-            <TabsContent value="history">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Transaction History</CardTitle>
-                      <CardDescription>
-                        View your recent transactions
-                      </CardDescription>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={fetchTransactionHistory}
-                      disabled={isLoadingHistory}
-                    >
-                      {isLoadingHistory ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingHistory ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      <span className="ml-2 text-muted-foreground">
-                        Loading transactions...
-                      </span>
-                    </div>
-                  ) : transactions.length === 0 ? (
-                    <div className="text-center py-8">
-                      <History className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                      <p className="text-muted-foreground">
-                        No transactions yet
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Your transaction history will appear here
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {transactions.map((tx) => (
-                        <div
-                          key={tx.hash}
-                          className="p-4 rounded-lg border border-border hover:border-primary/30 transition-colors"
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`p-2 rounded-full ${
-                                  tx.type === "receive"
-                                    ? "bg-green-500/10"
-                                    : "bg-orange-500/10"
-                                }`}
-                              >
-                                {tx.type === "receive" ? (
-                                  <ArrowDownLeft className="h-4 w-4 text-green-500" />
-                                ) : (
-                                  <ArrowUpRight className="h-4 w-4 text-orange-500" />
-                                )}
-                              </div>
-                              <div>
-                                <div className="font-semibold text-foreground">
-                                  {tx.type === "receive" ? "Received" : "Sent"}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {new Date(tx.timestamp * 1000).toLocaleString()}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-bold text-foreground">
-                                {tx.type === "receive" ? "+" : "-"}
-                                {tx.amount} {tx.token}
-                              </div>
-                              <div
-                                className={`text-xs ${
-                                  tx.status === "success"
-                                    ? "text-green-500"
-                                    : tx.status === "pending"
-                                    ? "text-yellow-500"
-                                    : "text-red-500"
-                                }`}
-                              >
-                                {tx.status}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs text-muted-foreground">
-                              <span className="font-medium">From:</span>{" "}
-                              <span className="font-mono">
-                                {tx.from.slice(0, 6)}...{tx.from.slice(-4)}
-                              </span>
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              <span className="font-medium">To:</span>{" "}
-                              <span className="font-mono">
-                                {tx.to.slice(0, 6)}...{tx.to.slice(-4)}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="mt-2 pt-2 border-t border-border">
-                            <a
-                              href={`https://voyager.online/tx/${tx.hash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-primary hover:underline flex items-center gap-1"
-                            >
-                              View on Voyager
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </TabsContent>

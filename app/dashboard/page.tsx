@@ -15,11 +15,14 @@ import { useWallet, useWalletPin } from "@/contexts/wallet-context"
 import { useAuth } from "@clerk/nextjs"
 import { Contract, RpcProvider } from "starknet"
 import { u256ToStrk, codeToFelt, feltToString } from "@/lib/contract-utils"
+import { getTokenByAddress, formatTokenAmount, SUPPORTED_TOKENS } from "@/lib/token-config"
 
 interface Giveaway {
   id: string
   name: string
   totalAmount: number
+  tokenAddress: string
+  tokenSymbol: string
   numWinners: number
   claimed: number
   status: "active" | "expired" | "completed"
@@ -38,6 +41,7 @@ interface ClaimedPrize {
   giveawayId: string
   giveawayName: string
   amount: number
+  tokenSymbol: string
   claimedAt: string
 }
 
@@ -112,9 +116,18 @@ export default function DashboardPage() {
     try {
       const giveawayId = giveaway?.giveaway_id ? Number(giveaway.giveaway_id) : 0
       const name = giveaway?.name ? feltToString(giveaway.name) : `Giveaway #${giveawayId}`
-      const totalAmount = giveaway?.total_amount 
-        ? parseFloat(u256ToStrk(giveaway.total_amount.low?.toString() || '0', giveaway.total_amount.high?.toString() || '0'))
-        : 0
+      
+      // Get token info
+      const tokenAddress = giveaway?.token_address || ''
+      const tokenInfo = getTokenByAddress(tokenAddress)
+      const tokenSymbol = tokenInfo?.symbol || 'STRK'
+      const decimals = tokenInfo?.decimals || 18
+      
+      // Parse amount with correct decimals
+      const amountLow = giveaway?.total_amount?.low?.toString() || '0'
+      const amountHigh = giveaway?.total_amount?.high?.toString() || '0'
+      const totalAmount = parseFloat(u256ToStrk(amountLow, amountHigh))
+      
       const numWinners = giveaway?.num_winners ? Number(giveaway.num_winners) : 0
       const claimedCount = giveaway?.claimed_count ? Number(giveaway.claimed_count) : 0
       const createdAt = giveaway?.created_at ? Number(giveaway.created_at) : 0
@@ -153,6 +166,8 @@ export default function DashboardPage() {
         id: giveawayId.toString(),
         name,
         totalAmount,
+        tokenAddress,
+        tokenSymbol,
         numWinners,
         claimed: claimedCount,
         status,
@@ -199,10 +214,29 @@ export default function DashboardPage() {
       const parsedPrizes: ClaimedPrize[] = []
       for (let i = 0; i < prizes.length; i++) {
         const prize = prizes[i]
+        const giveawayId = prize.giveaway_id?.toString() || '0'
+        
+        // Try to fetch giveaway details to get token info
+        let tokenSymbol = 'STRK'
+        try {
+          const giveawayDetails = await contract.get_giveaway_by_id(Number(giveawayId))
+          if (giveawayDetails && giveawayDetails.token_address) {
+            const tokenInfo = getTokenByAddress(giveawayDetails.token_address)
+            tokenSymbol = tokenInfo?.symbol || 'STRK'
+          }
+        } catch (e) {
+          // If we can't fetch details, default to STRK
+        }
+        
+        const amountLow = prize.amount?.low?.toString() || '0'
+        const amountHigh = prize.amount?.high?.toString() || '0'
+        const amount = parseFloat(u256ToStrk(amountLow, amountHigh))
+        
         parsedPrizes.push({
-          giveawayId: prize.giveaway_id?.toString() || '0',
+          giveawayId,
           giveawayName: feltToString(prize.giveaway_name),
-          amount: parseFloat(u256ToStrk(prize.amount.low?.toString() || '0', prize.amount.high?.toString() || '0')),
+          amount,
+          tokenSymbol,
           claimedAt: new Date(Number(prize.claimed_at) * 1000).toISOString().split('T')[0]
         })
       }
@@ -243,7 +277,11 @@ export default function DashboardPage() {
   }, [wallet?.address])
 
   const totalGiveaways = userStats?.createdCount || giveaways.length
-  const totalDistributed = giveaways.reduce((sum, g) => sum + (g.totalAmount * g.claimed) / g.numWinners, 0)
+  const totalDistributed = giveaways.reduce((sum, g) => {
+    const distributed = (g.totalAmount * g.claimed) / g.numWinners
+    return sum + distributed
+  }, 0)
+  const distributedTokenSymbol = giveaways.length > 0 ? giveaways[0].tokenSymbol : 'STRK'
   const totalClaimed = userStats?.claimedCount || 0
   const activeGiveaways = giveaways.filter((g) => g.status === "active").length
 
@@ -334,7 +372,7 @@ export default function DashboardPage() {
       
       toast({
         title: "Funds Reclaimed Successfully!",
-        description: `${unclaimedAmount.toFixed(2)} STRK returned to your wallet`,
+        description: `${unclaimedAmount.toFixed(4)} ${giveaway.tokenSymbol} returned to your wallet`,
       })
 
       // Refresh the giveaway list
@@ -383,7 +421,8 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Distributed</p>
-                    <p className="text-2xl font-bold text-foreground">{totalDistributed.toFixed(0)} STRK</p>
+                    <p className="text-2xl font-bold text-foreground">{totalDistributed.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Mixed tokens</p>
                   </div>
                   <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center">
                     <TrendingUp className="h-6 w-6 text-accent" />
@@ -442,7 +481,7 @@ export default function DashboardPage() {
                         <p className="text-sm text-muted-foreground">Claimed on {prize.claimedAt}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-success">{prize.amount.toFixed(4)} STRK</p>
+                        <p className="font-bold text-success">{prize.amount.toFixed(4)} {prize.tokenSymbol}</p>
                       </div>
                     </div>
                   ))}
@@ -522,7 +561,7 @@ export default function DashboardPage() {
                       <div className="grid grid-cols-2 gap-3 text-sm">
                         <div>
                           <span className="text-muted-foreground">Amount:</span>
-                          <span className="ml-2 font-medium text-foreground">{giveaway.totalAmount} STRK</span>
+                          <span className="ml-2 font-medium text-foreground">{giveaway.totalAmount.toFixed(4)} {giveaway.tokenSymbol}</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Winners:</span>
@@ -609,7 +648,7 @@ export default function DashboardPage() {
                       <TableRow key={giveaway.id}>
                         <TableCell className="font-medium">{giveaway.id}</TableCell>
                         <TableCell className="font-mono text-sm">{giveaway.name}</TableCell>
-                        <TableCell>{giveaway.totalAmount} STRK</TableCell>
+                        <TableCell>{giveaway.totalAmount.toFixed(4)} {giveaway.tokenSymbol}</TableCell>
                         <TableCell>{giveaway.numWinners}</TableCell>
                         <TableCell>
                           {giveaway.claimed}/{giveaway.numWinners}
@@ -672,7 +711,7 @@ export default function DashboardPage() {
               <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-muted/50">
                 <div>
                   <div className="text-sm text-muted-foreground mb-1">Total Amount</div>
-                  <div className="text-lg font-semibold text-foreground">{selectedGiveaway.totalAmount} STRK</div>
+                  <div className="text-lg font-semibold text-foreground">{selectedGiveaway.totalAmount.toFixed(4)} {selectedGiveaway.tokenSymbol}</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground mb-1">Claimed</div>
