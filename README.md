@@ -42,6 +42,7 @@ Gigi Pay removes all barriers to crypto adoption by providing:
 - **Network**: Starknet Mainnet
 - **Contract Address**: `0x045fcf74e9e7cef23af8e9cd6fff04f6fb957360d8b180a0e4da9c56712fad19`
 - **Language**: Cairo
+- **Repository**: [Gigipay Contract on GitHub](https://github.com/Olowodarey/Gigipay-contract)
 - **Features**:
   - Multi-token support (STRK, USDC, USDT, ETH, WBTC)
   - Poseidon hash-based claim codes
@@ -258,3 +259,17 @@ gigi-pay/
 ├── hooks/                   # Custom React hooks
 └── public/                  # Static assets
 ```
+
+
+## 🔗 Important Links
+
+### Live Application & Code
+- 🌐 **Live Demo**: [https://gigipay-ruby.vercel.app/](https://gigipay-ruby.vercel.app/)
+- 💻 **Frontend Repository**: [GitHub - Frontend](https://github.com/yourusername/gigi-pay)
+- 📜 **Smart Contract Repository**: [GitHub - Contract](https://github.com/Olowodarey/Gigipay-contract)
+- 🔍 **Contract on Voyager**: [View on Voyager](https://voyager.online/contract/0x045fcf74e9e7cef23af8e9cd6fff04f6fb957360d8b180a0e4da9c56712fad19)
+
+
+
+---
+\
