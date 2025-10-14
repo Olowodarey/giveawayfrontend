@@ -305,14 +305,22 @@ export default function CreatePage() {
       const totalU256 = tokenAmountToU256(totalAmountWithDecimals);
       const totalAmount = formData.totalPrize;
 
+      console.log("Approval details:", {
+        token: formData.selectedToken,
+        amount: totalAmount,
+        decimals: tokenDecimals,
+        amountWithDecimals: totalAmountWithDecimals,
+        walletAddress: wallet?.address
+      });
+
       // Approve tokens
       toast({
         title: "Approving Tokens",
-        description: `Approving ${formData.selectedToken} for giveaway contract...`,
+        description: `Approving ${totalAmount} ${formData.selectedToken}...`,
       });
 
       try {
-        await approveAsync({
+        const approvalResult = await approveAsync({
           params: {
             encryptKey: walletPin,
             wallet: wallet,
@@ -323,7 +331,15 @@ export default function CreatePage() {
           },
           bearerToken: bearerToken,
         });
+        
+        console.log("Approval successful:", approvalResult);
+        
+        toast({
+          title: "Tokens Approved",
+          description: `${totalAmount} ${formData.selectedToken} approved successfully`,
+        });
       } catch (approvalError: any) {
+        console.error("Approval error details:", approvalError);
         const errorMsg = (approvalError.message || "").toLowerCase();
         
         // Check for insufficient balance errors
@@ -332,12 +348,13 @@ export default function CreatePage() {
             errorMsg.includes("not enough") ||
             errorMsg.includes("exceeds balance")) {
           throw new Error(
-            `Insufficient ${formData.selectedToken} balance. You need ${formData.totalPrize} ${formData.selectedToken} but don't have enough in your wallet.`
+            `Insufficient ${formData.selectedToken} balance. You need ${formData.totalPrize} ${formData.selectedToken}. Please check your wallet.`
           );
         }
         
+        // More detailed error message
         throw new Error(
-          `Token approval failed: ${approvalError.message}. Please check your wallet balance.`
+          `Token approval failed: ${approvalError.message || "Unknown error"}. Please check your balance and try again.`
         );
       }
 
