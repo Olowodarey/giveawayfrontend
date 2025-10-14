@@ -81,6 +81,8 @@ export default function DashboardPage() {
         return
       }
 
+      console.log("Fetching giveaways for wallet:", wallet.address)
+
       // Use the new get_user_created_giveaways function
       const userGiveaways = await contract.get_user_created_giveaways(
         wallet.address,
@@ -88,22 +90,31 @@ export default function DashboardPage() {
         100 // limit - fetch up to 100 giveaways
       )
       
+      console.log("Raw giveaways from contract:", userGiveaways)
+      console.log("Number of giveaways:", userGiveaways?.length || 0)
+      
       // Parse the giveaways
       const parsedGiveaways: Giveaway[] = []
       for (let i = 0; i < userGiveaways.length; i++) {
         const giveaway = userGiveaways[i]
+        console.log(`Parsing giveaway ${i}:`, giveaway)
         const parsed = parseUserGiveaway(giveaway)
         if (parsed) {
           parsedGiveaways.push(parsed)
+          console.log(`Successfully parsed giveaway ${i}:`, parsed)
+        } else {
+          console.log(`Failed to parse giveaway ${i}`)
         }
       }
       
+      console.log("Total parsed giveaways:", parsedGiveaways.length)
       setGiveaways(parsedGiveaways)
     } catch (error) {
+      console.error("Error fetching giveaways:", error)
       setGiveaways([])
       toast({
         title: "Error Loading Giveaways",
-        description: "Could not fetch giveaways from the blockchain. Please try again.",
+        description: `Could not fetch giveaways: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       })
     } finally {
@@ -117,9 +128,19 @@ export default function DashboardPage() {
       const giveawayId = giveaway?.giveaway_id ? Number(giveaway.giveaway_id) : 0
       const name = giveaway?.name ? feltToString(giveaway.name) : `Giveaway #${giveawayId}`
       
-      // Get token info
-      const tokenAddress = giveaway?.token_address || ''
+      // Get token info - handle different address formats
+      let tokenAddress = giveaway?.token_address || ''
+      
+      // Convert address to string if it's not already
+      if (typeof tokenAddress !== 'string') {
+        tokenAddress = tokenAddress?.toString ? tokenAddress.toString() : String(tokenAddress)
+      }
+      
+      console.log("Token address from contract:", tokenAddress, typeof tokenAddress)
+      
       const tokenInfo = getTokenByAddress(tokenAddress)
+      console.log("Token info found:", tokenInfo)
+      
       const tokenSymbol = tokenInfo?.symbol || 'STRK'
       const decimals = tokenInfo?.decimals || 18
       
@@ -176,6 +197,7 @@ export default function DashboardPage() {
         creator: wallet?.address || '',
       }
     } catch (error) {
+      console.error("Error parsing giveaway:", error, giveaway)
       return null
     }
   }

@@ -40,10 +40,36 @@ export const SUPPORTED_TOKENS = {
 export type TokenSymbol = keyof typeof SUPPORTED_TOKENS;
 
 // Helper to get token by address
-export function getTokenByAddress(address: string) {
-  return Object.values(SUPPORTED_TOKENS).find(
-    (token) => token.address.toLowerCase() === address.toLowerCase()
-  );
+export function getTokenByAddress(address: string | any) {
+  // Handle different address formats from Starknet
+  let addressStr: string;
+  
+  if (typeof address === 'string') {
+    addressStr = address;
+  } else if (address && typeof address === 'object') {
+    // If it's an object, try to get the string representation
+    addressStr = address.toString ? address.toString() : String(address);
+  } else {
+    return undefined;
+  }
+  
+  // Normalize address format (remove leading zeros, ensure 0x prefix)
+  const normalizeAddress = (addr: string): string => {
+    addr = addr.toLowerCase().trim();
+    if (!addr.startsWith('0x')) {
+      addr = '0x' + addr;
+    }
+    // Remove leading zeros after 0x but keep at least one digit
+    addr = '0x' + addr.slice(2).replace(/^0+/, '') || '0';
+    return addr;
+  };
+  
+  const normalizedInput = normalizeAddress(addressStr);
+  
+  return Object.values(SUPPORTED_TOKENS).find((token) => {
+    const normalizedToken = normalizeAddress(token.address);
+    return normalizedToken === normalizedInput;
+  });
 }
 
 // Helper to format token amount based on decimals
