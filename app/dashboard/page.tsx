@@ -503,7 +503,7 @@ export default function DashboardPage() {
                         <p className="text-sm text-muted-foreground">Claimed on {prize.claimedAt}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-success">{prize.amount.toFixed(4)} {prize.tokenSymbol}</p>
+                        <p className="font-bold text-success">✓ Claimed</p>
                       </div>
                     </div>
                   ))}
